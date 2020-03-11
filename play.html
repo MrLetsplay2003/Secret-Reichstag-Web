@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Secret Something</title>
+		<link rel="icon" href="assets/icon/favicon.png">
+		<link rel="stylesheet" href="style.css">
+		<link rel="stylesheet" href="assets/font/germania.css">
+		<script src="network.js"></script>
+		<script src="play.js" async></script>
+	</head>
+	<body>
+		<div id="room-container" class="full">
+			<button id="btn-create" class="center btn" onclick="createRoom()">Create Room</button><br/>
+			<button id="btn-join" class="center btn space-top" onclick="joinRoom()">Join Room</button>
+		</div>
+		<div id="room-create-container" class="full" style="display:none;">
+			<input id="room-name" class="center input" placeholder="Room Name" autocomplete="off"/><br/>
+			<input id="player-count" type="number" min="7" max="14" class="center input space-top" placeholder="Player Count" autocomplete="off"/><br/>
+			<!--<input id="liberal-card-count" type="number" min="5" max="15" data-default="9" class="center input space-top" placeholder="Liberal Cards" autocomplete="off"/><br/>
+			<input id="communist-card-count" type="number" min="6" max="15" data-default="11" class="center input space-top" placeholder="Communist Cards" autocomplete="off"/><br/>
+			<input id="fascist-card-count" type="number" min="6" max="15" data-default="11" class="center input space-top" placeholder="Fascist cards" autocomplete="off"/><br/>-->
+			<button id="btn-create-confirm" class="center btn space-top" onclick="createRoomConfirm()">Create</button>
+		</div>
+		<div id="room-join-container" class="full" style="display:none;">
+			<input id="room-id" class="center input" placeholder="Room ID" autocomplete="off"/><br/>
+			<button id="btn-join-confirm" class="center btn space-top" onclick="joinRoomConfirm()">Join</button>
+		</div>
+		<div id="play-container" class="full" style="display:none;">
+			<input id="username" class="center input" placeholder="Username" autocomplete="off"/><br/>
+			<button id="btn-play" class="center btn space-top" onclick="nameConfirm()">Play</button>
+		</div>
+		<button id="btn-reset" class="btn" onclick="resetPage()">Back</button>
+		<div id="canvas-div">
+			<canvas id="main-canvas"></canvas>
+			<textarea id="event-log" readonly></textarea>
+			<input id="chat-in" placeholder="Chat"></input>
+		</div>
+	</body>
+</html>
