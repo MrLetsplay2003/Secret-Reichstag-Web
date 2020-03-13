@@ -1033,7 +1033,7 @@ function drawBoard(party, y, board, fullBorder = true) {
         }
 
         if(board.getNumCards() > cardIdx) {
-            drawImageWithBounds(storage.assets.fArticle, cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, y + unitPixel * 85, cardWidth, cardHeight);
+            drawImageWithBounds(storage.assets.article[party.name()], cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, y + unitPixel * 85, cardWidth, cardHeight);
         }
 
         if(cardIdx == 4) {
