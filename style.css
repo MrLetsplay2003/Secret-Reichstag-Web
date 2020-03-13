@@ -116,3 +116,18 @@ body, html {
 	font-size: 1vw;
 	outline: 0;
 }
+
+#copy-invite {
+	position: absolute;
+	left: 0.5208333333333%;
+	top: 3.7037037%;
+	width: 18.9583333%;
+	height: 2.77777777778%;
+	resize: none;
+	background-color: #363835;
+	border: none;
+	font-family: 'Germania One';
+	color: white;
+	font-size: 1vw;
+	outline: 0;
+}

@@ -7,6 +7,7 @@ var canvasDiv = document.getElementById("canvas-div");
 var canvas = document.getElementById("main-canvas");
 var eventLog = document.getElementById("event-log");
 var chatIn = document.getElementById("chat-in");
+var copyInvite = document.getElementById("copy-invite");
 
 var ctx = canvas.getContext("2d");
 
@@ -24,6 +25,19 @@ chatIn.onkeyup = event => {
             event.target.value = "";
             Network.sendPacket(Packet.of(p));
         }
+    }
+};
+
+copyInvite.onclick = event => {
+    if(storage.selfID != null) {
+        let c = document.createElement("input");
+        c.value = window.location.protocol + "//" + window.location.host + window.location.pathname + "?" + storage.room.getID();
+        document.body.appendChild(c);
+        c.focus();
+        c.select();
+        document.execCommand('copy');
+        c.remove();
+        alert("Copied invite link to clipboard");
     }
 };
 
