@@ -82,7 +82,7 @@ function nameConfirm() {
         return;
     }
 
-    if(!(/^(?:[a-zA-Z0-9äöü]){1,20}/.test(name))) {
+    if(!(/^(?:[a-zA-Z0-9äöü]){1,20}$/.test(name))) {
         alert("Username contains invalid characters");
         return;
     }
@@ -114,7 +114,7 @@ function resetPage() {
 
     if(window.location.search != "" && window.location.search != "?") {
         let roomID = window.location.search.substr(1);
-        if(!(/^\d{4,6}/.test(roomID))) return;
+        if(!(/^\d{4,6}$/.test(roomID))) return;
         document.getElementById("room-id").value = roomID;
         joinRoom();
         joinRoomConfirm();
