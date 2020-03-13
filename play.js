@@ -15,6 +15,10 @@ let storage = {};
 chatIn.onkeyup = event => {
     if(event.key == "Enter" && event.target.value.trim() != "") {
         if(storage.selfID != null) {
+            if(isPlayerDead(storage.selfID)) {
+                alert("Chat is currently disabled because you are dead");
+                return;
+            }
             let p = new PacketClientChatMessage();
             p.setMessage(event.target.value);
             event.target.value = "";
@@ -24,10 +28,6 @@ chatIn.onkeyup = event => {
 };
 
 resetPage();
-
-if(window.location.search != "" && window.location.search != "?") {
-    document.getElementById("room-id").value = window.location.search.substr(1);
-}
 
 function createRoom() {
     document.getElementById("room-container").style.display = "none";
@@ -111,6 +111,14 @@ function resetPage() {
     document.getElementById("play-container").style.display = "none";
 
     document.getElementById("room-container").style.display = "block";
+
+    if(window.location.search != "" && window.location.search != "?") {
+        let roomID = window.location.search.substr(1);
+        if(!(/^\d{4,6}/.test(roomID))) return;
+        document.getElementById("room-id").value = roomID;
+        joinRoom();
+        joinRoomConfirm();
+    }
 }
 
 function displayError(message) {
@@ -1122,6 +1130,7 @@ function getPlayer(playerID) {
 }
 
 function isPlayerDead(playerID) {
+    if(storage.room.getGameState() == null) return false;
     for(let p of storage.room.getGameState().getDeadPlayers()) {
         if(p.getID() == playerID) return true;
     }
