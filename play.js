@@ -76,9 +76,14 @@ function createRoomConfirm() {
 }
 
 function nameConfirm() {
-    let name = document.getElementById("username").value;
+    let name = document.getElementById("username").value.trim();
     if(name == "") {
         alert("You need to input a username");
+        return;
+    }
+
+    if(!(/^(?:[a-zA-Z0-9äöü]){1,20}/.test(name))) {
+        alert("Username contains invalid characters");
         return;
     }
 
@@ -595,10 +600,14 @@ async function play() {
                     let buttons = [];
                     for(let i = 0; i < storage.room.getPlayers().length; i++) {
                         let player = storage.room.getPlayers()[i];
-    
+
+                        let s = storage.room.getGameState();
+
                         if(player.getID() == storage.selfID) continue;
                         if(isPlayerDead(player.getID())) continue;
-    
+                        if(player.getID() == s.getChancellor().getID()) continue;
+                        if(player.getID() == s.getPresident().getID() && storage.room.getPlayers().length >= 8) continue;
+
                         buttons.push(createButton("Block", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
                             for(let b of buttons) b.remove();
 
