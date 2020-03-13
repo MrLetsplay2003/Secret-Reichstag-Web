@@ -1,6 +1,6 @@
 /* jshint esversion: 6 */
 
-var IS_BETA = true;
+var IS_BETA = false;
 
 class ClassUtils {
 
