@@ -85,8 +85,14 @@ function joinRoom() {
 }
 
 function rejoinRoom() {
+    let sessID = getCookie("sr-sessid");
+    if(sessID == null) {
+        alert("No session available to rejoin");
+        return;
+    }
+    
     document.getElementById("room-container").style.display = "none";
-    storage.sessionID = getCookie("sr-sessid");
+    storage.sessionID = sessID;
     play();
 }
 
