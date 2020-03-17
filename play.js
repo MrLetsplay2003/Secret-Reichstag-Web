@@ -41,6 +41,35 @@ copyInvite.onclick = event => {
     }
 };
 
+function setCookie(name,value,days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    document.cookie = name+'=; Max-Age=-99999999;';
+}
+
+function redirect(url) {
+    window.open(url,'_blank');
+}
+
 resetPage();
 
 function createRoom() {
@@ -53,6 +82,12 @@ function joinRoom() {
     document.getElementById("room-container").style.display = "none";
     document.getElementById("room-join-container").style.display = "block";
     storage.createRoom = false;
+}
+
+function rejoinRoom() {
+    document.getElementById("room-container").style.display = "none";
+    storage.sessionID = getCookie("sr-sessid");
+    play();
 }
 
 function joinRoomConfirm() {
@@ -153,16 +188,21 @@ async function play() {
     }
 
     let conPacket = new PacketClientConnect();
-    conPacket.setPlayerName(storage.username);
-    conPacket.setCreateRoom(storage.createRoom);
-    conPacket.setRoomID(storage.roomID);
-    conPacket.setRoomName(storage.roomName);
 
-    if(storage.roomSettings) {
-        let roomSettings = new RoomSettings();
-        roomSettings.setPlayerCount(storage.roomSettings.playerCount);
+    if(storage.sessionID) {
+        conPacket.setSessionID(storage.sessionID);
+    }else {
+        conPacket.setPlayerName(storage.username);
+        conPacket.setCreateRoom(storage.createRoom);
+        conPacket.setRoomID(storage.roomID);
+        conPacket.setRoomName(storage.roomName);
 
-        conPacket.setRoomSettings(roomSettings);
+        if(storage.roomSettings) {
+            let roomSettings = new RoomSettings();
+            roomSettings.setPlayerCount(storage.roomSettings.playerCount);
+    
+            conPacket.setRoomSettings(roomSettings);
+        }
     }
 
     storage = {};
@@ -179,6 +219,9 @@ async function play() {
 
         let room = response.getData().getRoom();
         let selfPlayer = response.getData().getSelfPlayer();
+        let sessionID = response.getData().getSessionID();
+
+        setCookie("sr-sessid", sessionID, 1);
 
         storage.room = room;
         storage.selfPlayer = selfPlayer;
@@ -213,6 +256,7 @@ async function play() {
             iconDead: loadImage("icon/icon-dead.png"),
             iconNotHitler: loadImage("icon/icon-not-hitler.png"),
             iconNotStalin: loadImage("icon/icon-not-stalin.png"),
+            iconConnection: loadImage("icon/connection.png"),
 
             actions: {
                 KILL_PLAYER: {
@@ -282,7 +326,7 @@ async function play() {
                 }
             }
         }
-    
+
         setInterval(draw, REFRESH_TIME);
     
         if(VERBOSE) console.log("Done!");
@@ -292,15 +336,32 @@ async function play() {
         if(VERBOSE) console.log("received", packet);
 
         if(PacketServerPlayerJoined.isInstance(packet.getData())) {
-            storage.room.getPlayers().push(packet.getData().getPlayer());
+
+            if(packet.getData().isRejoin()) {
+                for(let i = 0; i < storage.room.getPlayers().length; i++) {
+                    let pl = storage.room.getPlayers()[i];
+                    if(packet.getData().getPlayer().getID() == pl.getID()) {
+                        pl.offline = false;
+                        break;
+                    }
+                }
+            }else {
+                storage.room.getPlayers().push(packet.getData().getPlayer());
+            }
 
             createStartButtonIfNeeded();
         }
 
         if(PacketServerPlayerLeft.isInstance(packet.getData())) {
+
             for(let i = 0; i < storage.room.getPlayers().length; i++) {
-                if(packet.getData().getPlayer().getID() == storage.room.getPlayers()[i].getID()) {
-                    storage.room.getPlayers().splice(i, 1);
+                let pl = storage.room.getPlayers()[i];
+                if(packet.getData().getPlayer().getID() == pl.getID()) {
+                    if(packet.getData().isHardLeave()) {
+                        storage.room.getPlayers().splice(i, 1);
+                    }else {
+                        pl.offline = true;
+                    }
                     break;
                 }
             }
@@ -308,10 +369,19 @@ async function play() {
             removeStartButton();
         }
 
+        if(PacketServerPauseGame.isInstance(packet.getData())) {
+            storage.room.setGamePaused(true);
+        }
+
+        if(PacketServerUnpauseGame.isInstance(packet.getData())) {
+            storage.room.setGamePaused(false);
+        }
+
 
         if(PacketServerStopGame.isInstance(packet.getData())) {
             storage.selfRole = null;
             storage.partyPopup = null;
+            storage.room.setGameRunning(false);
 
             for(let p of storage.room.getPlayers()) {
                 p.isTeammate = null;
@@ -339,6 +409,7 @@ async function play() {
             let d = packet.getData();
 
             storage.selfRole = d.getRole();
+            storage.room.setGameRunning(true);
             
             if(d.getTeammates() != null) {
                 for(let t of d.getTeammates()) {
@@ -367,6 +438,8 @@ async function play() {
         }
 
         if(PacketServerUpdateGameState.isInstance(packet.getData())) {
+            clearStateBoundObjects();
+
             let s = packet.getData().getNewState();
             storage.room.setGameState(s);
 
@@ -379,9 +452,10 @@ async function play() {
                 let drawPileY = canvas.height / 2 - cardHeight / 2;
                 
                 createButton("Draw", drawPileX, drawPileY + cardHeight + unitPixel * 20, cardWidth, unitPixel * 40, btn => {
+                    if(isGamePaused()) return;
                     Network.sendPacket(Packet.of(new PacketClientDrawCards()));
                     btn.remove();
-                });
+                }, true);
             }else if(s.getMoveState() == GameMoveState.SELECT_CHANCELLOR && s.getPresident().getID() == storage.selfID) {
                 let unitPixel = canvas.width / 1920;
                 let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
@@ -401,12 +475,13 @@ async function play() {
                     if(isPlayerDead(player.getID())) continue;
 
                     buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                        if(isGamePaused()) return;
                         for(let b of buttons) b.remove();
                         
                         let p = new PacketClientSelectChancellor();
                         p.setPlayerID(player.getID());
                         Network.sendPacket(Packet.of(p));
-                    }));
+                    }, true));
                 }
             }else if(s.getMoveState() == GameMoveState.VOTE) {
                 if(isPlayerDead(storage.selfID)) return;
@@ -415,20 +490,22 @@ async function play() {
                 let buttons = [];
 
                 buttons.push(createButton("Vote Yes", canvas.width / 2 - unitPixel * 205, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
+                    if(isGamePaused()) return;
                     for(let b of buttons) b.remove();
 
                     let p = new PacketClientVote();
                     p.setYes(true);
                     Network.sendPacket(Packet.of(p));
-                }));
+                }, true));
 
                 buttons.push(createButton("Vote No", canvas.width / 2 + unitPixel * 5, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
+                    if(isGamePaused()) return;
                     for(let b of buttons) b.remove();
 
                     let p = new PacketClientVote();
                     p.setYes(false);
                     Network.sendPacket(Packet.of(p));
-                }));
+                }, true));
             }
         }
 
@@ -478,10 +555,12 @@ async function play() {
                     let drawPileY = canvas.height / 2 - cardHeight / 2;
                     
                     createButton("Inspect", drawPileX, drawPileY + cardHeight + unitPixel * 20, cardWidth, unitPixel * 40, btn => {
+                        if(isGamePaused()) return;
                         storage.hand.cards = d.getData().getCards();
                         btn.remove();
 
                         createButton("Confirm", canvas.width / 2 - unitPixel * 100, canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, btn2 => {
+                            if(isGamePaused()) return;
                             btn2.remove();
                             storage.hand.cards = [];
 
@@ -507,6 +586,7 @@ async function play() {
                         if(isPlayerDead(player.getID())) continue;
     
                         buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                            if(isGamePaused()) return;
                             for(let b of buttons) b.remove();
 
                             let p = new PacketClientPerformAction();
@@ -535,6 +615,7 @@ async function play() {
                         if(isPlayerDead(player.getID())) continue;
     
                         buttons.push(createButton("Kill", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                            if(isGamePaused()) return;
                             for(let b of buttons) b.remove();
 
                             let p = new PacketClientPerformAction();
@@ -563,6 +644,7 @@ async function play() {
                         if(isPlayerDead(player.getID())) continue;
     
                         buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                            if(isGamePaused()) return;
                             for(let b of buttons) b.remove();
 
                             let p = new PacketClientPerformAction();
@@ -591,6 +673,7 @@ async function play() {
                         if(isPlayerDead(player.getID())) continue;
     
                         buttons.push(createButton("Inspect", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                            if(isGamePaused()) return;
                             for(let b of buttons) b.remove();
 
                             let p = new PacketClientPerformAction();
@@ -631,6 +714,7 @@ async function play() {
                         if(player.getID() == s.getPresident().getID() && storage.room.getPlayers().length >= 8) continue;
 
                         buttons.push(createButton("Block", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
+                            if(isGamePaused()) return;
                             for(let b of buttons) b.remove();
 
                             let p = new PacketClientPerformAction();
@@ -638,7 +722,7 @@ async function play() {
 
                             a.setPlayerID(player.getID());
                             p.setData(a);
-                            
+
                             Network.sendPacket(Packet.of(p));
                         }));
                     }
@@ -672,6 +756,7 @@ async function play() {
             let buttons = [];
 
             buttons.push(createButton("Confirm", canvas.width / 2 - unitPixel * (vetoButton ? 200 : 100), canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, () => {
+                if(isGamePaused()) return;
                 if(storage.hand.selected.length != 1) {
                     alert("Select exactly 1 card to be discarded");
                     return;
@@ -692,6 +777,7 @@ async function play() {
 
             if(vetoButton) {
                 buttons.push(createButton("Veto", canvas.width / 2, canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, () => {
+                    if(isGamePaused()) return;
                     for(let btn of buttons) btn.remove();
                     for(let area of areas) area.remove();
 
@@ -709,6 +795,7 @@ async function play() {
             let buttons = [];
 
             buttons.push(createButton("Accept Veto", canvas.width / 2 - unitPixel * 205, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
+                if(isGamePaused()) return;
                 for(let b of buttons) b.remove();
 
                 let p = new PacketClientVeto();
@@ -717,6 +804,7 @@ async function play() {
             }));
 
             buttons.push(createButton("Decline Veto", canvas.width / 2 + unitPixel * 5, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
+                if(isGamePaused()) return;
                 for(let b of buttons) b.remove();
 
                 let p = new PacketClientVeto();
@@ -729,11 +817,12 @@ async function play() {
 
 function createStartButtonIfNeeded() {
     if(storage.room.getPlayers().length >= storage.room.getSettings().getPlayerCount()) {
+        if(storage.room.isGameRunning()) return;
         if(storage.room.getPlayers()[0].getID() != storage.selfID) return;
         let unitPixel = canvas.width / 1920;
         let b = createButton("Start Game", canvas.width / 2 - unitPixel * 200, canvas.height / 2 - unitPixel * 100, unitPixel * 400, unitPixel * 200, button => {
             button.remove();
-            
+
             Network.sendPacket(Packet.of(new PacketClientStartGame()));
         });
         b.classList.add("start-button");
@@ -884,9 +973,23 @@ function draw() {
         }else if(storage.selfRole) {
             let partyName = storage.selfRole.getParty().name();
 
-            ctx.fillStyle = player.isTeammate ? storage.colors.teammate[partyName] : (player.isLeader ? storage.colors.leader[partyName] : "white");
+            let pColor = "white";
+
+            if(player.isLeader) {
+                storage.colors.leader[partyName];
+            }
+
+            if(player.isTeammate) {
+                pColor = storage.colors.teammate[partyName];
+            }
+
+            ctx.fillStyle = pColor;
         }else {
             ctx.fillStyle = "white";
+        }
+
+        if(player.offline) {
+            ctx.fillStyle = "orangered";
         }
 
         ctx.fillText(playerName + (isDead ? " (Dead)" : ""), playerListX + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 15);
@@ -900,6 +1003,11 @@ function draw() {
         let iconOffsetX = 0;
         let iconY = playerListY + unitPixel * 60 * i + unitPixel * 30;
         let iconSize = unitPixel * 25;
+
+        if(player.offline) {
+            drawImageWithBounds(storage.assets.iconConnection, iconX + iconOffsetX, iconY, iconSize, iconSize);
+            iconOffsetX += iconSize + unitPixel * 5;
+        }
 
         if(s.getPresident() != null && s.getPresident().getID() == player.getID()) {
             drawImageWithBounds(storage.assets.iconPresident, iconX + iconOffsetX, iconY, iconSize, iconSize);
@@ -1057,16 +1165,23 @@ function clearClickables() {
     }
 }
 
+function clearStateBoundObjects() {
+    for(let cl of document.getElementsByClassName("state-bound")) {
+        cl.remove();
+    }
+}
+
 function clearHoverables() {
     for(let cl of document.getElementsByClassName("hoverable")) {
         cl.remove();
     }
 }
 
-function createButton(name, x, y, width, height, onclick) {
+function createButton(name, x, y, width, height, onclick, stateBound = false) {
     let btn = document.createElement("button");
     btn.textContent = name;
     btn.classList.add("clickable", "ingame-button");
+    if(stateBound) btn.classList.add("state-bound");
     btn.style.position = "absolute";
     btn.style.left = (x / canvas.width * 100) + "%";
     btn.style.top = (y / canvas.height * 100) + "%";
@@ -1078,10 +1193,11 @@ function createButton(name, x, y, width, height, onclick) {
     return btn;
 }
 
-function createClickableArea(x, y, width, height, onclick, label = null) {
+function createClickableArea(x, y, width, height, onclick, label = null, stateBound = false) {
     let area = document.createElement("div");
     if(label != null) area.title = label;
     area.classList.add("clickable");
+    if(stateBound) area.classList.add("state-bound");
     area.style.position = "absolute";
     area.style.left = (x / canvas.width * 100) + "%";
     area.style.top = (y / canvas.height * 100) + "%";
@@ -1092,10 +1208,11 @@ function createClickableArea(x, y, width, height, onclick, label = null) {
     return area;
 }
 
-function createHoverableArea(x, y, width, height, label) {
+function createHoverableArea(x, y, width, height, label, stateBound = false) {
     let area = document.createElement("div");
     if(label != null) area.title = label;
     area.classList.add("hoverable");
+    if(stateBound) area.classList.add("state-bound");
     area.style.position = "absolute";
     area.style.left = (x / canvas.width * 100) + "%";
     area.style.top = (y / canvas.height * 100) + "%";
@@ -1163,4 +1280,8 @@ function isPlayerNotStalinConfirmed(playerID) {
         if(p.getID() == playerID) return true;
     }
     return false;
+}
+
+function isGamePaused() {
+    return storage.room.isGamePaused();
 }
