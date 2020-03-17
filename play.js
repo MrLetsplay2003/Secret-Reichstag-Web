@@ -1160,20 +1160,23 @@ function drawBoard(party, y, board, fullBorder = true) {
 }
 
 function clearClickables() {
-    for(let cl of document.getElementsByClassName("clickable")) {
-        cl.remove();
+    let els;
+    while((els = document.getElementsByClassName("clickable")).length != 0) {
+        els[0].remove();
     }
 }
 
 function clearStateBoundObjects() {
-    for(let cl of document.getElementsByClassName("state-bound")) {
-        cl.remove();
+    let els;
+    while((els = document.getElementsByClassName("state-bound")).length != 0) {
+        els[0].remove();
     }
 }
 
 function clearHoverables() {
-    for(let cl of document.getElementsByClassName("hoverable")) {
-        cl.remove();
+    let els;
+    while((els = document.getElementsByClassName("hoverable")).length != 0) {
+        els[0].remove();
     }
 }
 
