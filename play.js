@@ -41,11 +41,11 @@ copyInvite.onclick = event => {
     }
 };
 
-function setCookie(name,value,days) {
+function setCookie(name, value, hours) {
     var expires = "";
-    if (days) {
+    if (hours) {
         var date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
+        date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
         expires = "; expires=" + date.toUTCString();
     }
     document.cookie = name + "=" + (value || "")  + expires + "; path=/";
@@ -90,7 +90,7 @@ function rejoinRoom() {
         alert("No session available to rejoin");
         return;
     }
-    
+
     document.getElementById("room-container").style.display = "none";
     storage.sessionID = sessID;
     play();
@@ -227,7 +227,7 @@ async function play() {
         let selfPlayer = response.getData().getSelfPlayer();
         let sessionID = response.getData().getSessionID();
 
-        setCookie("sr-sessid", sessionID, 1);
+        setCookie("sr-sessid", sessionID, 5);
 
         storage.room = room;
         storage.selfPlayer = selfPlayer;
