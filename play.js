@@ -982,7 +982,7 @@ function draw() {
             let pColor = "white";
 
             if(player.isLeader) {
-                storage.colors.leader[partyName];
+                pColor = storage.colors.leader[partyName];
             }
 
             if(player.isTeammate) {
