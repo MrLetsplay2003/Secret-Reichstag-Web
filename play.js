@@ -264,6 +264,14 @@ async function play() {
             iconNotStalin: loadImage("icon/icon-not-stalin.png"),
             iconConnection: loadImage("icon/connection.png"),
 
+            iconRole: {
+                LIBERAL: loadImage("icon/role-liberal.png"),
+                STALIN: loadImage("icon/role-stalin.png"),
+                COMMUNIST: loadImage("icon/role-communist.png"),
+                HITLER: loadImage("icon/role-hitler.png"),
+                FASCIST: loadImage("icon/role-fascist.png"),
+            },
+
             actions: {
                 KILL_PLAYER: {
                     COMMUNIST: loadImage("icon/icon-kill-c.png"),
@@ -389,14 +397,29 @@ async function play() {
             storage.partyPopup = null;
             storage.room.setGameRunning(false);
 
+            clearClickables();
+            clearHoverables();
+
             for(let p of storage.room.getPlayers()) {
                 p.isTeammate = null;
                 p.isLeader = null;
                 p.vote = null;
+                p.wasRole = packet.getData().roles[p.getID()];
             }
 
-            clearClickables();
-            clearHoverables();
+            let unitPixel = canvas.width / 1920;
+            let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
+            let playerListY = unitPixel * 50;
+            let playerListWidth = canvas.width / 5 - unitPixel * 20;
+            let playerListHeight = unitPixel * 60 * 14; // 14 players max
+
+            let bt = createButton("Dismiss roles", playerListX, playerListY + playerListHeight, playerListWidth, unitPixel * 50, b => {
+                b.remove();
+
+                for(let p of storage.room.getPlayers()) {
+                    p.wasRole = null;
+                }
+            });
 
             if(packet.getData().getWinner() != null) {
                 let unitPixel = canvas.width / 1920;
@@ -1057,6 +1080,11 @@ function draw() {
 
         if(player.vote != null) {
             drawImageWithBounds(player.vote ? storage.assets.iconYes : storage.assets.iconNo, iconX + iconOffsetX, iconY, iconSize, iconSize);
+            iconOffsetX += iconSize + unitPixel * 5;
+        }
+
+        if(player.wasRole != null) {
+            drawImageWithBounds(storage.assets.iconRole[player.wasRole.name()], iconX + iconOffsetX, iconY, iconSize, iconSize);
             iconOffsetX += iconSize + unitPixel * 5;
         }
         
