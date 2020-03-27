@@ -227,6 +227,8 @@ async function play() {
         let selfPlayer = response.getData().getSelfPlayer();
         let sessionID = response.getData().getSessionID();
 
+        if(response.getData().isVoteDone()) storage.selfVoted = true;
+
         setCookie("sr-sessid", sessionID, 5);
 
         storage.room = room;
@@ -472,6 +474,8 @@ async function play() {
             let s = packet.getData().getNewState();
             storage.room.setGameState(s);
 
+            if(s.getMoveState() != GameMoveState.VOTE) storage.selfVoted = null;
+
             if(s.getMoveState() == GameMoveState.DRAW_CARDS && s.getPresident().getID() == storage.selfID) {
                 let unitPixel = canvas.width / 1920;
                 let cardWidth = unitPixel * 150;
@@ -513,7 +517,7 @@ async function play() {
                     }, true));
                 }
             }else if(s.getMoveState() == GameMoveState.VOTE) {
-                if(isPlayerDead(storage.selfID)) return;
+                if(isPlayerDead(storage.selfID) || storage.selfVoted) return;
 
                 let unitPixel = canvas.width / 1920;
                 let buttons = [];
@@ -525,6 +529,7 @@ async function play() {
                     let p = new PacketClientVote();
                     p.setYes(true);
                     Network.sendPacket(Packet.of(p));
+                    storage.selfVoted = true;
                 }, true));
 
                 buttons.push(createButton("Vote No", canvas.width / 2 + unitPixel * 5, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
@@ -534,6 +539,7 @@ async function play() {
                     let p = new PacketClientVote();
                     p.setYes(false);
                     Network.sendPacket(Packet.of(p));
+                    storage.selfVoted = true;
                 }, true));
             }
         }
