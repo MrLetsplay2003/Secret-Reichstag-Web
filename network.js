@@ -61,7 +61,12 @@ class ClassUtils {
 					e.name = function() {
 						return k;
 					}
+					
 					window[d.name][k] = castFunction(e, false);
+				}
+
+				window[d.name].valueOf = function(name) {
+					return d.enumValues[name];
 				}
 			}
 		}
@@ -74,6 +79,16 @@ class ClassUtils {
 			rawObject[key] = ClassUtils.deserialize(rawObject[key]);
 		}
 		return rawObject.jsClass == null ? rawObject : window[rawObject.jsClass].cast(rawObject);
+	}
+
+	static preSerialize(object) {
+		if(typeof object != "object" || object == null) return object;
+		if(object.jsEnumName != null) return object.jsEnumName;
+
+		for(let key in object) {
+			object[key] = ClassUtils.preSerialize(object[key]);
+		}
+		return object;
 	}
 
 }
@@ -110,7 +125,7 @@ class Packet {
 	}
 
 	serialize() {
-		return JSON.stringify(this);
+		return JSON.stringify(ClassUtils.preSerialize(this));
 	}
 
 	static deserialize(rawPacket) {

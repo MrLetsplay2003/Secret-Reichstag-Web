@@ -63,7 +63,7 @@ function getCookie(name) {
 }
 
 function eraseCookie(name) {
-    document.cookie = name+'=; Max-Age=-99999999;';
+    document.cookie = name + '=; Max-Age=-99999999;';
 }
 
 function redirect(url) {
@@ -127,6 +127,7 @@ function createRoomConfirm() {
 
     storage.roomName = roomName;
     storage.roomSettings = {};
+    storage.roomSettings.mode = document.getElementById("game-mode").value;
     storage.roomSettings.playerCount = parseInt(playerCount);
 }
 
@@ -206,7 +207,18 @@ async function play() {
         if(storage.roomSettings) {
             let roomSettings = new RoomSettings();
             roomSettings.setPlayerCount(storage.roomSettings.playerCount);
-    
+            roomSettings.setMode(storage.roomSettings.mode);
+
+            if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
+                roomSettings.setCommunistCardCount(11);
+                roomSettings.setFascistCardCount(11);
+                roomSettings.setLiberalCardCount(9);
+            }else if(storage.roomSettings.mode == "SECRET_HITLER") {
+                roomSettings.setCommunistCardCount(0);
+                roomSettings.setFascistCardCount(9);
+                roomSettings.setLiberalCardCount(11);
+            }
+
             conPacket.setRoomSettings(roomSettings);
         }
     }
@@ -913,19 +925,24 @@ function draw() {
     ctx.textBaseline = "top";
     ctx.fillText("Room " + storage.roomID, unitPixel * 5, unitPixel * 5);
 
+    let mode = storage.room.getMode();
+
     // Liberal track
+
+    let liberalBoardOffset = mode == GameMode.SECRET_REICHSTAG ? 0 : canvas.height / 6;
+
     ctx.fillStyle = "#363835";
-    ctx.fillRect(canvas.width / 5, 0, canvas.width * 3 / 5, canvas.height / 3);
+    ctx.fillRect(canvas.width / 5, liberalBoardOffset, canvas.width * 3 / 5, canvas.height / 3);
 
     ctx.fillStyle = "#61c8d9";
-    ctx.fillRect(canvas.width / 5 + unitPixel * 10, unitPixel * 10, canvas.width * 3 / 5 - unitPixel * 20, canvas.height / 3 - unitPixel * 15);
+    ctx.fillRect(canvas.width / 5 + unitPixel * 10, liberalBoardOffset + unitPixel * 10, canvas.width * 3 / 5 - unitPixel * 20, canvas.height / 3 - unitPixel * 15);
 
     for(let i = 0; i < 4; i++) {
         let circleArea = canvas.width / 5.5;
         let x = canvas.width / 2 - circleArea / 2 + circleArea / 3 * i;
         ctx.fillStyle = storage.room.getGameState().getFailedElections() == i ? "yellow" : "white";
         ctx.beginPath();
-        ctx.arc(x, canvas.height / 3 - (canvas.height / 3 - unitPixel * 85 - cardHeight) / 2, unitPixel * 20, 0, 2 * Math.PI);
+        ctx.arc(x, liberalBoardOffset + canvas.height / 3 - (canvas.height / 3 - unitPixel * 85 - cardHeight) / 2, unitPixel * 20, 0, 2 * Math.PI);
         ctx.fill();
     }
 
@@ -938,10 +955,10 @@ function draw() {
 
         let cardOffsetX = canvas.width / 5 + spaceLeftRight;
 
-        ctx.fillRect(cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, unitPixel * 85, cardWidth, cardHeight);
+        ctx.fillRect(cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, liberalBoardOffset + unitPixel * 85, cardWidth, cardHeight);
 
         if(libBoard.getNumCards() > cardIdx) {
-            drawImageWithBounds(storage.assets.lArticle, cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, unitPixel * 85, cardWidth, cardHeight);
+            drawImageWithBounds(storage.assets.lArticle, cardOffsetX + (cardWidth + cardSpacing) * cardIdx + cardSpacing / 2, liberalBoardOffset + unitPixel * 85, cardWidth, cardHeight);
         }
     }
 
@@ -949,15 +966,17 @@ function draw() {
     ctx.font = "normal bold " + unitPixel * 40 + "px Germania One";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Liberal", canvas.width / 5 + canvas.width * 3 / 5 / 2, unitPixel * 50);
+    ctx.fillText("Liberal", canvas.width / 5 + canvas.width * 3 / 5 / 2, liberalBoardOffset + unitPixel * 50);
 
     // Communist track
 
-    drawBoard(GameParty.COMMUNIST, canvas.height / 3, gameState.getCommunistBoard(), false);
+    if(mode == GameMode.SECRET_REICHSTAG) drawBoard(GameParty.COMMUNIST, canvas.height / 3, gameState.getCommunistBoard(), false);
 
     // Fascist track
 
-    drawBoard(GameParty.FASCIST, canvas.height * 2 / 3, gameState.getFascistBoard(), true);
+    let fascistBoardOffset = mode == GameMode.SECRET_REICHSTAG ? 0 : -canvas.height / 6;
+
+    drawBoard(GameParty.FASCIST, fascistBoardOffset + canvas.height * 2 / 3, gameState.getFascistBoard(), true);
 
     // Draw pile
     
