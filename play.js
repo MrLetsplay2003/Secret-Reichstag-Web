@@ -428,7 +428,7 @@ async function play() {
             let playerListHeight = unitPixel * 60 * 14; // 14 players max
 
             let bt = createButton("Dismiss roles", playerListX, playerListY + playerListHeight, playerListWidth, unitPixel * 50, b => {
-                b.remove();
+                bt.remove();
 
                 for(let p of storage.room.getPlayers()) {
                     p.wasRole = null;
@@ -451,6 +451,9 @@ async function play() {
         if(PacketServerStartGame.isInstance(packet.getData())) {
             let d = packet.getData();
 
+            clearClickables();
+            clearHoverables();
+
             storage.selfRole = d.getRole();
             storage.room.setGameRunning(true);
             
@@ -462,6 +465,10 @@ async function play() {
                         break;
                     }
                 }
+            }
+
+            for(let p of storage.room.getPlayers()) {
+                p.wasRole = null;
             }
             
             if(d.getLeader() != null) {
