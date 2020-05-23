@@ -61,7 +61,7 @@ class ClassUtils {
 					e.name = function() {
 						return k;
 					}
-					
+
 					window[d.name][k] = castFunction(e, false);
 				}
 
