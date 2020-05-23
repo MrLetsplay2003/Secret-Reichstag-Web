@@ -215,8 +215,8 @@ async function play() {
                 roomSettings.setLiberalCardCount(9);
             }else if(storage.roomSettings.mode == "SECRET_HITLER") {
                 roomSettings.setCommunistCardCount(0);
-                roomSettings.setFascistCardCount(9);
-                roomSettings.setLiberalCardCount(11);
+                roomSettings.setFascistCardCount(11);
+                roomSettings.setLiberalCardCount(9);
             }
 
             conPacket.setRoomSettings(roomSettings);
