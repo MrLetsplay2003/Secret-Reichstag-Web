@@ -92,6 +92,7 @@ function rejoinRoom() {
     }
 
     document.getElementById("room-container").style.display = "none";
+    document.getElementById("play-container").style.display = "none";
     storage.sessionID = sessID;
     play();
 }
