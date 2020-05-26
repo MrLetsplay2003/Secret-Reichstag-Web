@@ -155,6 +155,10 @@ class Network {
 				return;
 			}
 
+			Network.webSocket.onclose = function() {
+				alert("Uh-oh, it looks like you got disconnected. Please try rejoining from the main page");
+			}
+
 			Network.webSocket.addEventListener("message", ev => {
 				let pack = JSON.parse(ev.data);
 				if(!init) {
