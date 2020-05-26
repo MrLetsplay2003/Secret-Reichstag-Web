@@ -364,12 +364,11 @@ async function play() {
         if(VERBOSE) console.log("received", packet);
 
         if(PacketServerPlayerJoined.isInstance(packet.getData())) {
-
             if(packet.getData().isRejoin()) {
                 for(let i = 0; i < storage.room.getPlayers().length; i++) {
                     let pl = storage.room.getPlayers()[i];
                     if(packet.getData().getPlayer().getID() == pl.getID()) {
-                        pl.offline = false;
+                        pl.online = true;
                         break;
                     }
                 }
@@ -388,7 +387,7 @@ async function play() {
                     if(packet.getData().isHardLeave()) {
                         storage.room.getPlayers().splice(i, 1);
                     }else {
-                        pl.offline = true;
+                        pl.online = false;
                     }
                     break;
                 }
@@ -1050,7 +1049,7 @@ function draw() {
             ctx.fillStyle = "white";
         }
 
-        if(player.offline) {
+        if(!player.online) {
             ctx.fillStyle = "orangered";
         }
 
@@ -1066,7 +1065,7 @@ function draw() {
         let iconY = playerListY + unitPixel * 60 * i + unitPixel * 30;
         let iconSize = unitPixel * 25;
 
-        if(player.offline) {
+        if(!player.online) {
             drawImageWithBounds(storage.assets.iconConnection, iconX + iconOffsetX, iconY, iconSize, iconSize);
             iconOffsetX += iconSize + unitPixel * 5;
         }
