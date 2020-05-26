@@ -453,6 +453,7 @@ async function play() {
 
             clearClickables();
             clearHoverables();
+            storage.winner = null;
 
             storage.selfRole = d.getRole();
             storage.room.setGameRunning(true);
