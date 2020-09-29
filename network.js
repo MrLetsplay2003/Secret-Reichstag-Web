@@ -148,7 +148,7 @@ class Network {
 		Network.packetQueue = [];
 		let init = false;
 		return new Promise((resolve, reject) => {
-			Network.webSocket = new WebSocket(IS_BETA ? "ws://127.0.0.1:34643" : "wss://graphite-official.com/sswss/");
+			Network.webSocket = new WebSocket(IS_BETA ? "ws://127.0.0.1:34642" : "wss://graphite-official.com/sswss/");
 
 			Network.webSocket.onerror = function(event) {
 				reject(event);
