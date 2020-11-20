@@ -117,19 +117,12 @@ function createRoomConfirm() {
         return;
     }
 
-    let playerCount = document.getElementById("player-count").value;
-    if(playerCount == "") {
-        alert("You need to input a player count");
-        return;
-    }
-
     document.getElementById("room-create-container").style.display = "none";
     document.getElementById("play-container").style.display = "block";
 
     storage.roomName = roomName;
     storage.roomSettings = {};
     storage.roomSettings.mode = document.getElementById("game-mode").value;
-    storage.roomSettings.playerCount = parseInt(playerCount);
 }
 
 function nameConfirm() {
@@ -207,7 +200,6 @@ async function play() {
 
         if(storage.roomSettings) {
             let roomSettings = new RoomSettings();
-            roomSettings.setPlayerCount(storage.roomSettings.playerCount);
             roomSettings.setMode(storage.roomSettings.mode);
 
             if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
@@ -871,10 +863,14 @@ async function play() {
 }
 
 function createStartButtonIfNeeded() {
-    if(storage.room.getPlayers().length >= storage.room.getSettings().getPlayerCount()) {
+    let mode = storage.room.getMode();
+    if(storage.room.getPlayers().length >= mode.getMinPlayers()) {
         if(storage.room.isGameRunning()) return;
         if(storage.room.getPlayers()[0].getID() != storage.selfID) return;
         let unitPixel = canvas.width / 1920;
+
+        removeStartButton();
+
         let b = createButton("Start Game", canvas.width / 2 - unitPixel * 200, canvas.height / 2 - unitPixel * 100, unitPixel * 400, unitPixel * 200, button => {
             button.remove();
 
