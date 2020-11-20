@@ -386,7 +386,7 @@ async function play() {
                 }
             }
 
-            removeStartButton();
+            if(storage.room.getPlayers().length < storage.room.getMode().getMinPlayers()) removeStartButton();
         }
 
         if(PacketServerPauseGame.isInstance(packet.getData())) {
