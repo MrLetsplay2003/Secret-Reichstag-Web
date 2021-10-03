@@ -1,7 +1,5 @@
 /* jshint esversion: 6 */
 
-var IS_BETA = true;
-
 class ClassUtils {
 
 	static loadClasses(classDescriptors) {
@@ -148,7 +146,7 @@ class Network {
 		Network.packetQueue = [];
 		let init = false;
 		return new Promise((resolve, reject) => {
-			Network.webSocket = new WebSocket(IS_BETA ? "ws://127.0.0.1:34642" : "wss://graphite-official.com/sswss/");
+			Network.webSocket = new WebSocket(window.location.protocol.replace("http", "ws") + "//" + window.location.hostname + "/sswss");
 
 			Network.webSocket.onerror = function(event) {
 				reject(event);
