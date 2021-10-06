@@ -481,6 +481,8 @@ async function play() {
         }
 
         if(PacketServerUpdateGameState.isInstance(packet.getData())) {
+            if(storage.room == null) return; // We're most likely not connected yet
+
             clearStateBoundObjects();
 
             let s = packet.getData().getNewState();
