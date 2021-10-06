@@ -133,7 +133,7 @@ function nameConfirm() {
     }
 
     if(!(/^(?:[a-zA-Z0-9äöü]){1,20}$/.test(name))) {
-        alert("Username contains invalid characters");
+        alert("Username contains invalid characters or is too long");
         return;
     }
 

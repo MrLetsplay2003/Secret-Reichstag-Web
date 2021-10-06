@@ -1,5 +1,7 @@
 /* jshint esversion: 6 */
 
+var VERBOSE_NETWORK = true;
+
 class ClassUtils {
 
 	static loadClasses(classDescriptors) {
@@ -159,6 +161,9 @@ class Network {
 
 			Network.webSocket.addEventListener("message", ev => {
 				let pack = JSON.parse(ev.data);
+
+				if(VERBOSE_NETWORK) console.log("Received raw", pack);
+
 				if(!init) {
 					ClassUtils.loadClasses(pack.classes);
 					resolve();
@@ -193,6 +198,7 @@ class Network {
 	}
 
 	static sendPacket(packet) {
+		if(VERBOSE_NETWORK) console.log("Queued packet", packet);
 		return new Promise((resolve) => {
 			Network.packetQueue.push({packet: packet, resolve: resolve});
 			Network.webSocket.send(packet.serialize());
