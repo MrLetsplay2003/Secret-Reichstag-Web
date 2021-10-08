@@ -11,7 +11,9 @@ var eventLog = document.getElementById("event-log");
 var chatIn = document.getElementById("chat-in");
 var copyInvite = document.getElementById("copy-invite");
 var cardPile = document.getElementById("card-pile");
+var cardPileText = document.getElementById("card-pile-text");
 var playerList = document.getElementById("player-list");
+var roomIDEl = document.getElementById("room-id-display");
 
 var ctx = canvas.getContext("2d");
 
@@ -21,7 +23,9 @@ chatIn.onkeyup = event => {
 	if(event.key == "Enter" && event.target.value.trim() != "") {
 		if(storage.selfID != null) {
 			if(isPlayerDead(storage.selfID)) {
-				alert("Chat is currently disabled because you are dead");
+				new Popup("Chat is currently disabled because you are dead")
+					.addButton("Okay")
+					.show();
 				return;
 			}
 			let p = new PacketClientChatMessage();
@@ -34,41 +38,27 @@ chatIn.onkeyup = event => {
 
 copyInvite.onclick = event => {
 	if(storage.selfID != null) {
-		let c = document.createElement("input");
-		c.value = window.location.protocol + "//" + window.location.host + window.location.pathname + "?" + storage.room.getID();
-		document.body.appendChild(c);
-		c.focus();
-		c.select();
-		document.execCommand('copy');
-		c.remove();
-		alert("Copied invite link to clipboard");
+		if(navigator.clipboard != null) {
+			let link = window.location.protocol + "//" + window.location.host + window.location.pathname + "?" + storage.room.getID();
+			navigator.clipboard.writeText(link).then(() => {
+				Popup.ofTitleAndText("Invite", "Copied invite link to clipboard")
+					.addButton("Okay")
+					.show();
+			});
+		}else {
+			let c = document.createElement("input");
+			c.value = window.location.protocol + "//" + window.location.host + window.location.pathname + "?" + storage.room.getID();
+			document.body.appendChild(c);
+			c.focus();
+			c.select();
+			document.execCommand('copy');
+			c.remove();
+			Popup.ofTitleAndText("Invite", "Copied invite link to clipboard")
+				.addButton("Okay")
+				.show();
+		}
 	}
 };
-
-function setCookie(name, value, hours) {
-	var expires = "";
-	if (hours) {
-		var date = new Date();
-		date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
-		expires = "; expires=" + date.toUTCString();
-	}
-	document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-}
-
-function getCookie(name) {
-	var nameEQ = name + "=";
-	var ca = document.cookie.split(';');
-	for(var i=0;i < ca.length;i++) {
-		var c = ca[i];
-		while (c.charAt(0)==' ') c = c.substring(1,c.length);
-		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-	}
-	return null;
-}
-
-function eraseCookie(name) {
-	document.cookie = name + '=; Max-Age=-99999999;';
-}
 
 function redirect(url) {
 	window.open(url,'_blank');
@@ -93,9 +83,9 @@ function joinRoom() {
 }
 
 function rejoinRoom() {
-	let sessID = getCookie("sr-sessid");
+	let sessID = localStorage.sessionID;
 	if(sessID == null) {
-		alert("No session available to rejoin");
+		Popup.ofTitleAndText("Error", "No session available to rejoin").addButton("Okay").show();
 		return;
 	}
 
@@ -108,7 +98,7 @@ function rejoinRoom() {
 function joinRoomConfirm() {
 	let roomID = document.getElementById("room-id").value;
 	if(roomID == "") {
-		alert("You need to input a room id");
+		Popup.ofTitleAndText("Error", "You need to input a room id").addButton("Okay").show();
 		return;
 	}
 
@@ -121,7 +111,7 @@ function joinRoomConfirm() {
 function createRoomConfirm() {
 	let roomName = document.getElementById("room-name").value;
 	if(roomName == "") {
-		alert("You need to input a room name");
+		Popup.ofTitleAndText("Error", "You need to input a room name").addButton("Okay").show();
 		return;
 	}
 
@@ -136,12 +126,12 @@ function createRoomConfirm() {
 function nameConfirm() {
 	let name = document.getElementById("username").value.trim();
 	if(name == "") {
-		alert("You need to input a username");
+		Popup.ofTitleAndText("Error", "You need to input a username").addButton("Okay").show();
 		return;
 	}
 
 	if(!(/^(?:[a-zA-Z0-9äöü]){1,20}$/.test(name))) {
-		alert("Username contains invalid characters or is too long");
+		Popup.ofTitleAndText("Error", "Username contains invalid characters or is too long").addButton("Okay").show();
 		return;
 	}
 
@@ -242,7 +232,7 @@ async function play() {
 
 		if(response.getData().isVoteDone()) storage.selfVoted = true;
 
-		setCookie("sr-sessid", sessionID, 5);
+		localStorage.sessionID = sessionID;
 
 		storage.room = room;
 		storage.selfPlayer = selfPlayer;
@@ -252,6 +242,8 @@ async function play() {
 			cards: [],
 			selected: []
 		}
+
+		roomIDEl.innerText = "Room #" + room.getID();
 
 		document.getElementById("btn-reset").remove();
 
@@ -365,6 +357,7 @@ async function play() {
 		}
 
 		updatePlayerList();
+		updateCardPile();
 
 		setInterval(draw, REFRESH_TIME);
 		window.onresize = draw;
@@ -511,6 +504,7 @@ async function play() {
 			let s = packet.getData().getNewState();
 			storage.room.setGameState(s);
 			updatePlayerList();
+			updateCardPile();
 
 			if(s.getMoveState() != GameMoveState.VOTE) storage.selfVoted = null;
 
@@ -1163,6 +1157,10 @@ function draw() {
 	}
 	*/
 
+}
+
+function updateCardPile() {
+	cardPileText.innerText = storage.room.getGameState().getDrawPileSize();
 }
 
 function updatePlayerList() {

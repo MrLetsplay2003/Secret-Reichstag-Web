@@ -44,6 +44,10 @@ body, html {
 	color: black;
 }
 
+.btn:hover {
+	background-color: lime;
+}
+
 .w {
 	width: 20%;
 }
@@ -122,12 +126,24 @@ body, html {
 	outline: 0;
 }
 
-#copy-invite {
+#room-id-display {
 	position: absolute;
 	left: 10px;
 	top: 10px;
 	width: calc(20% - 20px);
-	height: 25px;
+	height: 50px;
+	color: white;
+	font-size: 2vw;
+	display: grid;
+	align-content: center;
+}
+
+#copy-invite {
+	position: absolute;
+	left: 10px;
+	top: 70px;
+	width: calc(20% - 20px);
+	height: 30px;
 	resize: none;
 	background-color: #363835;
 	border: none;
@@ -196,7 +212,6 @@ body, html {
 	left: 10px;
 	width: calc(100% - 20px);
 	margin-top: 10px;
-	word-wrap: break-word;
 	font-size: 1.5vw;
 	color: white;
 	text-align: left;
@@ -205,7 +220,9 @@ body, html {
 
 .player-list-element > a {
 	display:block;
-	width: 100%;
+	width: 80%;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .player-icon {

@@ -7,9 +7,17 @@ class Popup {
 	buttons = []
 	element = null
 
-	constructor(title, text) {
-		this.title = title;
-		this.text = text;
+	constructor() {}
+
+	static ofTitleAndText(title, text) {
+		let p = new Popup();
+		p.title = title;
+		p.text = text;
+		return p;
+	}
+
+	static ofText(text) {
+		return Popup.ofTitleAndText(null, text);
 	}
 
 	addButton(text, action) {
