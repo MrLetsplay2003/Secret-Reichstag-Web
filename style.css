@@ -81,7 +81,7 @@ body, html {
 }
 
 #canvas-div {
-	position: absolute;
+	position: relative;
 }
 
 #main-canvas {
@@ -92,9 +92,9 @@ body, html {
 
 #event-log {
 	position: absolute;
-	left: 0.5208333333333%;
-	bottom: 3.7037037037%;
-	width: 18.9583333%;
+	left: 10px;
+	bottom: 38px;
+	width: calc(20% - 20px);
 	height: 30%;
 	resize: none;
 	background-color: #363835;
@@ -108,10 +108,10 @@ body, html {
 
 #chat-in {
 	position: absolute;
-	left: 0.5208333333333%;
-	bottom: 0.925925925925926%;
-	width: 18.9583333%;
-	height: 2.77777777778%;
+	left: 10px;
+	bottom: 10px;
+	width: calc(20% - 20px);
+	height: 25px;
 	resize: none;
 	background-color: #363835;
 	border: none;
@@ -124,10 +124,10 @@ body, html {
 
 #copy-invite {
 	position: absolute;
-	left: 0.5208333333333%;
-	top: 3.7037037%;
-	width: 18.9583333%;
-	height: 2.77777777778%;
+	left: 10px;
+	top: 10px;
+	width: calc(20% - 20px);
+	height: 25px;
 	resize: none;
 	background-color: #363835;
 	border: none;
@@ -135,4 +135,95 @@ body, html {
 	color: white;
 	font-size: 1vw;
 	outline: 0;
+}
+
+#game-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	background-color: #1d1d1d;
+}
+
+#canvas-container {
+	width: 60%;
+	height: 100%;
+	max-width: 1000px;
+	margin: 0 auto;
+}
+
+#card-pile-container {
+	position: absolute;
+	right: calc(80% + 10px);
+	top: 50%;
+	transform: translate(0, -50%);
+	max-width: 200px;
+	height: min-content;
+	user-select: none;
+}
+
+#card-pile {
+	width: 100%;
+	height: auto;
+}
+
+#card-pile-text {
+	position: absolute;
+	top: 55%;
+	left: 0;
+	width: 100%;
+	font-size: 3vw;
+	color: white;
+	text-align: center;
+}
+
+#player-list {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: calc(20% - 20px);
+	height: calc(100% - 20px);
+	background-color: #363835;
+	overflow-x: hidden;
+	overflow-y: auto;
+	user-select: none;
+}
+
+.player-list-element {
+	position: relative;
+	left: 10px;
+	width: calc(100% - 20px);
+	margin-top: 10px;
+	word-wrap: break-word;
+	font-size: 1.5vw;
+	color: white;
+	text-align: left;
+	min-height: 50px;
+}
+
+.player-list-element > a {
+	display:block;
+	width: 100%;
+}
+
+.player-icon {
+	width: 1.5vw;
+	margin-right: 5px;
+	margin-top: 5px;
+}
+
+.player-list-element::after {
+	display: block;
+	content: "";
+	width: 100%;
+	height: 2px;
+	margin-top: 5px;
+	background: linear-gradient(to right, rgba(128, 128, 128, 0), rgba(128, 128, 128, 255), rgba(128, 128, 128, 0))
+}
+
+.player-list-placeholder {
+	display: inline-block;
+	height: 1.5vw;
 }

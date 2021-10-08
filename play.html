@@ -5,11 +5,15 @@
 		<link rel="icon" href="assets/icon/favicon.png">
 		<link rel="stylesheet" href="style.css">
 		<link rel="stylesheet" href="style-mobile.css">
+		<link rel="stylesheet" href="popup.css">
 		<link rel="stylesheet" href="assets/font/germania.css">
 		<script src="network.js"></script>
 		<script src="play.js" async></script>
+		<script src="draw.js" async></script>
+		<script src="popup.js" async></script>
 	</head>
 	<body>
+		<div id="popup-container"></div>
 		<div id="room-container" class="full">
 			<div class="center" style="width:100%">
 				<button id="btn-create" class="btn w" onclick="createRoom()">Create Room</button><br/>
@@ -49,10 +53,19 @@
 			</div>
 		</div>
 		<button id="btn-reset" class="btn" onclick="resetPage()">Back</button>
-		<div id="canvas-div">
-			<canvas id="main-canvas"></canvas>
+		<div id="game-container">
+			<div id="canvas-container">
+				<div id="canvas-div">
+					<canvas id="main-canvas"></canvas>
+				</div>
+			</div>
+			<div id="card-pile-container">
+				<img id="card-pile" src="assets/article/back.png"></img>
+				<a id="card-pile-text">0</a>
+			</div>
 			<textarea id="event-log" readonly></textarea>
 			<input id="chat-in" placeholder="Chat"></input>
+			<div id="player-list"></div>
 			<button id="copy-invite">Copy Invite Link</button>
 		</div>
 	</body>
