@@ -70,7 +70,6 @@ class Popup {
 				};
 				popup.appendChild(buttonEl);
 			}else if(el.type == "cards_view") {
-				console.log(el);
 				let viewEl = document.createElement("div");
 				viewEl.classList.add("popup-cards-view");
 

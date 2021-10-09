@@ -433,8 +433,7 @@ async function play() {
 			playerRole.innerText = "Waiting";
 			playerRole.style.color = "white";
 
-			clearClickables();
-			clearHoverables();
+			playerListButton.style.display = "none";
 
 			for(let p of storage.room.getPlayers()) {
 				p.isTeammate = null;
@@ -452,9 +451,6 @@ async function play() {
 
 		if(PacketServerStartGame.isInstance(packet.getData())) {
 			let d = packet.getData();
-
-			clearClickables();
-			clearHoverables();
 
 			storage.selfRole = d.getRole();
 			storage.room.setGameRunning(true);
@@ -496,8 +492,6 @@ async function play() {
 
 		if(PacketServerUpdateGameState.isInstance(packet.getData())) {
 			if(storage.room == null) return; // We're most likely not connected yet
-
-			clearStateBoundObjects();
 
 			let s = packet.getData().getNewState();
 			storage.room.setGameState(s);
@@ -880,27 +874,6 @@ function addIcon(playerEl, icon) {
 	let iconEl = icon.cloneNode();
 	iconEl.classList.add("player-icon");
 	playerEl.appendChild(iconEl);
-}
-
-function clearClickables() {
-	let els;
-	while((els = document.getElementsByClassName("clickable")).length != 0) {
-		els[0].remove();
-	}
-}
-
-function clearStateBoundObjects() {
-	let els;
-	while((els = document.getElementsByClassName("state-bound")).length != 0) {
-		els[0].remove();
-	}
-}
-
-function clearHoverables() {
-	let els;
-	while((els = document.getElementsByClassName("hoverable")).length != 0) {
-		els[0].remove();
-	}
 }
 
 function loadImage(assetName) {

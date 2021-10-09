@@ -145,10 +145,6 @@ body, html {
 	width: calc(20% - 20px);
 	height: 30px;
 	resize: none;
-	background-color: #363835;
-	border: none;
-	font-family: 'Germania One';
-	color: white;
 	font-size: 1vw;
 	outline: 0;
 }
