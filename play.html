@@ -7,13 +7,16 @@
 		<link rel="stylesheet" href="style-mobile.css">
 		<link rel="stylesheet" href="popup.css">
 		<link rel="stylesheet" href="assets/font/germania.css">
+		<script src="util.js" async></script>
 		<script src="network.js"></script>
 		<script src="play.js" async></script>
 		<script src="draw.js" async></script>
 		<script src="popup.js" async></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
 		<div id="popup-container"></div>
+		<button id="popup-unhide-button" onclick="Popup.unhideCurrentPopup()">!</button>
 		<div id="room-container" class="full">
 			<div class="center" style="width:100%">
 				<button id="btn-create" class="btn w" onclick="createRoom()">Create Room</button><br/>
@@ -59,15 +62,49 @@
 					<canvas id="main-canvas"></canvas>
 				</div>
 			</div>
-			<div id="card-pile-container">
-				<img id="card-pile" src="assets/article/back.png"></img>
-				<a id="card-pile-text">0</a>
+			<div id="mobile-lower">
+				<div id="mobile-controls">
+					<div id="card-pile-container">
+						<img id="card-pile" src="assets/article/back.png"></img>
+						<a id="card-pile-text">0</a>
+						<button id="card-pile-draw" class="fancy-button" onclick="drawButton()">Draw</button>
+					</div>
+					<div id=mobile-controls-right>
+						<div id="player-role" style="color: white">Waiting</div>
+						<div id="mobile-buttons">
+							<button class="mobile-button fancy-button" onclick="mobilePlayers()">Players</button>
+							<button class="mobile-button fancy-button" onclick="mobileChat()">Chat</button>
+							<button class="mobile-button fancy-button" onclick="mobileMenu()">Menu</button>
+						</div>
+					</div>
+				</div>
+				<div id="mobile-chat">
+					<textarea id="event-log" readonly></textarea>
+					<input id="chat-in" placeholder="Chat"></input>
+				</div>
+				<div id="player-list"></div>
+				<button id="player-list-button" class="fancy-button">?</button>
+				<div id="mobile-menu">
+					<div id="mobile-menu-items">
+						<div id="room-id-display">Room #------</div>
+						<button id="copy-invite">Copy Invite Link</button>
+					</div>
+				</div>
+				<div id="vote-buttons">
+					<button class="vote-button fancy-button" onclick="voteButton(true)">Vote Yes</button>
+					<button class="vote-button fancy-button" onclick="voteButton(false)">Vote No</button>
+				</div>
+				<div id="veto-buttons">
+					<button class="veto-button fancy-button" onclick="vetoButton(true)">Accept Veto</button>
+					<button class="veto-button fancy-button" onclick="vetoButton(false)">Decline Veto</button>
+				</div>
+				<div id="pick-cards">
+					<button id="pick-cards-confirm" class="cards-button fancy-button">Confirm</button>
+					<button id="pick-cards-veto" class="cards-button fancy-button">Veto</button>
+					<div id="pick-cards-cards"></div>
+				</div>
+				<button id="start-game" class="fancy-button" onclick="startGameFunction()">Start Game</button>
 			</div>
-			<textarea id="event-log" readonly></textarea>
-			<input id="chat-in" placeholder="Chat"></input>
-			<div id="player-list"></div>
-			<div id="room-id-display">Room #------</div>
-			<button id="copy-invite">Copy Invite Link</button>
 		</div>
 	</body>
 </html>

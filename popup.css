@@ -8,7 +8,7 @@
 	max-height: 100%;
 	min-width: 500px;
 	pointer-events: none;
-	z-index: 101;
+	z-index: 102;
 }
 
 .popup {
@@ -26,6 +26,9 @@
 	transform: translate(-50%, -50%);
 	display: flex;
 	flex-direction: column;
+	border: 3px solid #1d1d1d;
+	box-shadow: 10px 5px 10px #1d1d1d;
+
 }
 
 .popup-button {
@@ -52,6 +55,7 @@
 	margin-top: 10px;
 	font-weight: bold;
 	font-size: 30px;
+	user-select: none;
 }
 
 .popup-text {
@@ -64,13 +68,43 @@
 	flex-grow: 1;
 	display: grid;
 	align-content: center;
+	user-select: none;
+}
+
+.popup-cards-view {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.popup-cards-view > img {
+	width: 30%;
+}
+
+#popup-unhide-button {
+	display: none;
+	position: fixed;
+	right: 10px;
+	bottom: 10px;
+	width: 50px;
+	height: 50px;
+	background-color: orangered;
+	font-size: 30px;
+	border: none;
+	border-radius: 50%;
+	z-index: 101;
+}
+
+#popup-unhide-button:hover {
+	background-color: red;
+	cursor: pointer;
 }
 
 @media only screen and (max-width: 46.875em) {
 	.popup {
 		top: 50%;
 		left: 5px;
-		width: calc(100% - 10px);
+		width: calc(100% - 16px);
 		transform: translate(0, -50%);
 	}
 

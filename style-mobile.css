@@ -21,4 +21,185 @@
 		height: 50px;
 		font-size: 30px;
 	}
+
+	#game-container {
+		display: flex;
+		flex-direction: column;
+	}
+
+	#canvas-container {
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: min-content;
+	}
+
+	#mobile-lower {
+		position: relative;
+		width: 100%;
+		flex-grow: 1;
+	}
+
+	#player-list {
+		position: absolute;
+		top: 100px;
+		left: 0;
+		width: 100%;
+		height: calc(100% - 100px);
+	}
+
+	.player-list-element {
+		font-size: 25px;
+	}
+	
+	.player-icon {
+		width: 30px;
+	}
+
+	.player-icons {
+		height: 30px;
+	}
+
+	.player-name {
+		width: 100%;
+	}
+	
+	.player-upper {
+		height: 30px;
+	}
+
+	.player-button {
+		display: none; /* Mobile uses popups */
+	}
+
+	#mobile-controls {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 98px;
+		font-size: 20px;
+		background-color: #363835;
+		border-bottom: 2px solid gray;
+		display: grid;
+		grid-template-columns: max-content 1fr;
+	}
+
+	#card-pile-container {
+		display: inline-block;
+		position: relative;
+		top: 0;
+		left: 0;
+		width: min-content;
+		height: 98px;
+		transform: none;
+	}
+
+	#card-pile {
+		height: 98px;
+		width: auto;
+	}
+
+	#card-pile-text {
+		top: 55%;
+		font-size: 25px;
+	}
+
+	#mobile-controls-right {
+		display: inline-block;
+		position: relative;
+		height: 100%;
+		flex-grow: 1;
+	}
+
+	#mobile-buttons {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		height: 50%;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+
+	.mobile-button {
+		display: inline-block;
+		flex-grow: 1;
+		font-size: 25px;
+		margin: 5px;
+	}
+
+	#event-log {
+		position: absolute;
+		top: 100px;
+		left: 0;
+		width: 100%;
+		height: calc(100% - 150px);
+		font-size: 20px;
+	}
+
+	#chat-in {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 50px;
+		font-size: 20px;
+		background-color: #1d1d1d;
+	}
+
+	#player-role {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 50%;
+		font-size: 25px;
+	}
+
+	#mobile-menu {
+		position: absolute;
+		top: 100px;
+		left: 0;
+		width: 100%;
+		height: calc(100% - 100px);
+	}
+
+	#mobile-menu-items {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: auto;
+		height: auto;
+		transform: translate(-50%, -50%);
+	}
+
+	#room-id-display {
+		font-size: 30px;
+		position: unset;
+		width: 100%;
+		height: auto;
+	}
+
+	#copy-invite {
+		position: unset;
+		width: 100%;
+		height: auto;
+		margin-top: 10px;
+		font-size: 30px;
+		color: black;
+	}
+
+	#pick-cards {
+		display: none;
+	}
+
+	#vote-buttons, #veto-buttons {
+		display: none;
+	}
+
+	#player-list-button {
+		display: none;
+	}
+
 }

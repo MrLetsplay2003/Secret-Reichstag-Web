@@ -13,7 +13,17 @@ var copyInvite = document.getElementById("copy-invite");
 var cardPile = document.getElementById("card-pile");
 var cardPileText = document.getElementById("card-pile-text");
 var playerList = document.getElementById("player-list");
-var roomIDEl = document.getElementById("room-id-display");
+var roomIDDisplay = document.getElementById("room-id-display");
+var playerRole = document.getElementById("player-role");
+var voteButtons = document.getElementById("vote-buttons");
+var vetoButtons = document.getElementById("veto-buttons");
+var cardPileDraw = document.getElementById("card-pile-draw");
+var pickCards = document.getElementById("pick-cards");
+var pickCardsCards = document.getElementById("pick-cards-cards");
+var pickCardsConfirm = document.getElementById("pick-cards-confirm");
+var pickCardsVeto = document.getElementById("pick-cards-veto");
+var playerListButton = document.getElementById("player-list-button");
+var startGame = document.getElementById("start-game");
 
 var ctx = canvas.getContext("2d");
 
@@ -28,6 +38,7 @@ chatIn.onkeyup = event => {
 					.show();
 				return;
 			}
+
 			let p = new PacketClientChatMessage();
 			p.setMessage(event.target.value);
 			event.target.value = "";
@@ -218,13 +229,15 @@ async function play() {
 
 	prepareCanvas();
 
+	if(isMobile()) mobilePlayers(); // Toggle to player list by default on mobile
+
 	Network.sendPacket(Packet.of(conPacket)).then(response => {
 		if(PacketServerJoinError.isInstance(response.getData())) {
 			displayError("Error: " + response.getData().getMessage());
 			return;
 		}
 
-		gameContainer.style.display = "block";
+		gameContainer.style.display = null; // Use CSS display
 
 		let room = response.getData().getRoom();
 		let selfPlayer = response.getData().getSelfPlayer();
@@ -243,7 +256,7 @@ async function play() {
 			selected: []
 		}
 
-		roomIDEl.innerText = "Room #" + room.getID();
+		roomIDDisplay.innerText = "Room #" + room.getID();
 
 		document.getElementById("btn-reset").remove();
 
@@ -417,6 +430,9 @@ async function play() {
 			storage.partyPopup = null;
 			storage.room.setGameRunning(false);
 
+			playerRole.innerText = "Waiting";
+			playerRole.style.color = "white";
+
 			clearClickables();
 			clearHoverables();
 
@@ -427,30 +443,10 @@ async function play() {
 				p.wasRole = packet.getData().roles[p.getID()];
 			}
 
-			let unitPixel = canvas.width / 1920;
-			let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-			let playerListY = unitPixel * 50;
-			let playerListWidth = canvas.width / 5 - unitPixel * 20;
-			let playerListHeight = unitPixel * 60 * 14; // 14 players max
-
-			let bt = createButton("Dismiss roles", playerListX, playerListY + playerListHeight, playerListWidth, unitPixel * 50, b => {
-				bt.remove();
-
-				for(let p of storage.room.getPlayers()) {
-					p.wasRole = null;
-				}
-			});
-
 			if(packet.getData().getWinner() != null) {
-				let unitPixel = canvas.width / 1920;
-
-				storage.winner = packet.getData().getWinner();
-
-				createButton("Dismiss", canvas.width / 2 - unitPixel * 200, canvas.height / 2 + unitPixel * 100, unitPixel * 400, unitPixel * 50, b => {
-					storage.winner = null;
-					b.remove();
-					createStartButtonIfNeeded();
-				});
+				Popup.ofTitleAndText("Game Over", "The " + packet.getData().getWinner().getFriendlyName() + " have won the game")
+					.addButton("GG", () => createStartButtonIfNeeded())
+					.show();
 			}
 		}
 
@@ -459,11 +455,13 @@ async function play() {
 
 			clearClickables();
 			clearHoverables();
-			storage.winner = null;
 
 			storage.selfRole = d.getRole();
 			storage.room.setGameRunning(true);
-			
+
+			playerRole.innerText = d.getRole().name();
+			playerRole.style.color = storage.colors.role[storage.selfRole.name()];
+
 			if(d.getTeammates() != null) {
 				for(let t of d.getTeammates()) {
 					for(let p of storage.room.getPlayers()) {
@@ -509,80 +507,27 @@ async function play() {
 			if(s.getMoveState() != GameMoveState.VOTE) storage.selfVoted = null;
 
 			if(s.getMoveState() == GameMoveState.DRAW_CARDS && s.getPresident().getID() == storage.selfID) {
-				let unitPixel = canvas.width / 1920;
-				let cardWidth = unitPixel * 150;
-				let cardHeight = cardWidth * 1.45;
-
-				let drawPileX = canvas.width / 5 - unitPixel * 20 - cardWidth;
-				let drawPileY = canvas.height / 2 - cardHeight / 2;
-				
-				createButton("Draw", drawPileX, drawPileY + cardHeight + unitPixel * 20, cardWidth, unitPixel * 40, btn => {
-					if(isGamePaused()) return;
-					Network.sendPacket(Packet.of(new PacketClientDrawCards()));
-					btn.remove();
-				}, true);
+				promptDrawCards();
 			}else if(s.getMoveState() == GameMoveState.SELECT_CHANCELLOR && s.getPresident().getID() == storage.selfID) {
-				let unitPixel = canvas.width / 1920;
-				let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-				let playerListY = unitPixel * 50;
-				let playerListWidth = canvas.width / 5 - unitPixel * 20;
-
-				let buttons = [];
-				for(let i = 0; i < storage.room.getPlayers().length; i++) {
-					let player = storage.room.getPlayers()[i];
-
-					if(player.getID() == storage.selfID) continue;
-
-					let s = storage.room.getGameState();
-					if(s.getPreviousPresident() != null && player.getID() == s.getPreviousPresident().getID()) continue;
-					if(s.getPreviousChancellor() != null && player.getID() == s.getPreviousChancellor().getID()) continue;
-					if(s.getBlockedPlayer() != null && player.getID() == s.getBlockedPlayer().getID()) continue;
-					if(isPlayerDead(player.getID())) continue;
-
-					buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-						if(isGamePaused()) return;
-						for(let b of buttons) b.remove();
-						
-						let p = new PacketClientSelectChancellor();
-						p.setPlayerID(player.getID());
-						Network.sendPacket(Packet.of(p));
-					}, true));
-				}
+				showPlayerSelect("Select a player to be the next chancellor", "Select", player => {
+					if(player.getID() == storage.selfID) return false;
+					if(s.getPreviousPresident() != null && player.getID() == s.getPreviousPresident().getID()) return false;
+					if(s.getPreviousChancellor() != null && player.getID() == s.getPreviousChancellor().getID()) return false;
+					if(s.getBlockedPlayer() != null && player.getID() == s.getBlockedPlayer().getID()) return false;
+					if(isPlayerDead(player.getID())) return false;
+					return true;
+				}, player => {
+					let p = new PacketClientSelectChancellor();
+					p.setPlayerID(player.getID());
+					Network.sendPacket(Packet.of(p));
+				});
 			}else if(s.getMoveState() == GameMoveState.VOTE) {
 				if(isPlayerDead(storage.selfID) || storage.selfVoted) return;
-
-				let unitPixel = canvas.width / 1920;
-				let buttons = [];
-
-				buttons.push(createButton("Vote Yes", canvas.width / 2 - unitPixel * 205, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
-					if(isGamePaused()) return;
-					for(let b of buttons) b.remove();
-
-					let p = new PacketClientVote();
-					p.setYes(true);
-					Network.sendPacket(Packet.of(p));
-					storage.selfVoted = true;
-				}, true));
-
-				buttons.push(createButton("Vote No", canvas.width / 2 + unitPixel * 5, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
-					if(isGamePaused()) return;
-					for(let b of buttons) b.remove();
-
-					let p = new PacketClientVote();
-					p.setYes(false);
-					Network.sendPacket(Packet.of(p));
-					storage.selfVoted = true;
-				}, true));
+				promptVote();
 			}
 		}
 
 		if(PacketServerVoteResults.isInstance(packet.getData())) {
-			let unitPixel = canvas.width / 1920;
-			let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-			let playerListY = unitPixel * 50;
-			let playerListWidth = canvas.width / 5 - unitPixel * 20;
-			let playerListHeight = unitPixel * 60 * 14; // 14 players max
-
 			for(let pID in packet.getData().getVotes()) {
 				let isYes = packet.getData().getVotes()[pID];
 				let pl;
@@ -596,17 +541,8 @@ async function play() {
 				pl.vote = isYes;
 			}
 
-			for(let btn of document.getElementsByClassName("dismiss-vote-results")) btn.remove();
-
-			let bt = createButton("Dismiss vote results", playerListX, playerListY + playerListHeight, playerListWidth, unitPixel * 50, b => {
-				b.remove();
-
-				for(let p of storage.room.getPlayers()) {
-					p.vote = null;
-				}
-			});
-
-			bt.classList.add("dismiss-vote-results");
+			updatePlayerList();
+			showVoteDismiss();
 		}
 
 		if(PacketServerPlayerAction.isInstance(packet.getData())) {
@@ -614,270 +550,110 @@ async function play() {
 			switch(d.getAction()) {
 				case GameBoardAction.EXAMINE_TOP_CARDS:
 				{
-					let unitPixel = canvas.width / 1920;
-					let cardWidth = unitPixel * 150;
-					let cardHeight = cardWidth * 1.45;
-
-					let drawPileX = canvas.width / 5 - unitPixel * 20 - cardWidth;
-					let drawPileY = canvas.height / 2 - cardHeight / 2;
-					
-					createButton("Inspect", drawPileX, drawPileY + cardHeight + unitPixel * 20, cardWidth, unitPixel * 40, btn => {
-						if(isGamePaused()) return;
-						storage.hand.cards = d.getData().getCards();
-						btn.remove();
-
-						createButton("Confirm", canvas.width / 2 - unitPixel * 100, canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, btn2 => {
-							if(isGamePaused()) return;
-							btn2.remove();
-							storage.hand.cards = [];
-
-							let p = new PacketClientPerformAction();
-							Network.sendPacket(Packet.of(p));
-						});
-					});
-
+					promptInspectCards(d.getData().getCards());
 					break;
 				}
 				case GameBoardAction.EXAMINE_TOP_CARDS_OTHER:
 				{
-					let unitPixel = canvas.width / 1920;
-					let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-					let playerListY = unitPixel * 50;
-					let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	
-					let buttons = [];
-					for(let i = 0; i < storage.room.getPlayers().length; i++) {
-						let player = storage.room.getPlayers()[i];
-	
-						if(player.getID() == storage.selfID) continue;
-						if(isPlayerDead(player.getID())) continue;
-	
-						buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-							if(isGamePaused()) return;
-							for(let b of buttons) b.remove();
+					showPlayerSelect("Select a player to examine the top three cards", "Select", player => {
+						if(player.getID() == storage.selfID) return false;
+						if(isPlayerDead(player.getID())) return false;
+						return true;
+					}, player => {
+						let p = new PacketClientPerformAction();
+						let a = new ActionExamineTopCardsOther();
 
-							let p = new PacketClientPerformAction();
-							let a = new ActionExamineTopCardsOther();
+						a.setPlayerID(player.getID());
+						p.setData(a);
 
-							a.setPlayerID(player.getID());
-							p.setData(a);
-							
-							Network.sendPacket(Packet.of(p));
-						}));
-					}
+						Network.sendPacket(Packet.of(p));
+					});
 					break;
 				}
 				case GameBoardAction.KILL_PLAYER:
 				{
-					let unitPixel = canvas.width / 1920;
-					let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-					let playerListY = unitPixel * 50;
-					let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	
-					let buttons = [];
-					for(let i = 0; i < storage.room.getPlayers().length; i++) {
-						let player = storage.room.getPlayers()[i];
-	
-						if(player.getID() == storage.selfID) continue;
-						if(isPlayerDead(player.getID())) continue;
-	
-						buttons.push(createButton("Kill", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-							if(isGamePaused()) return;
-							for(let b of buttons) b.remove();
+					showPlayerSelect("Select a player to kill", "Kill", player => {
+						if(player.getID() == storage.selfID) return false;
+						if(isPlayerDead(player.getID())) return false;
+						return true;
+					}, player => {
+						let p = new PacketClientPerformAction();
+						let a = new ActionKillPlayer();
 
-							let p = new PacketClientPerformAction();
-							let a = new ActionKillPlayer();
+						a.setPlayerID(player.getID());
+						p.setData(a);
 
-							a.setPlayerID(player.getID());
-							p.setData(a);
-							
-							Network.sendPacket(Packet.of(p));
-						}));
-					}
+						Network.sendPacket(Packet.of(p));
+					});
 					break;
 				}
 				case GameBoardAction.PICK_PRESIDENT:
 				{
-					let unitPixel = canvas.width / 1920;
-					let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-					let playerListY = unitPixel * 50;
-					let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	
-					let buttons = [];
-					for(let i = 0; i < storage.room.getPlayers().length; i++) {
-						let player = storage.room.getPlayers()[i];
-	
-						if(player.getID() == storage.selfID) continue;
-						if(isPlayerDead(player.getID())) continue;
-	
-						buttons.push(createButton("Select", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-							if(isGamePaused()) return;
-							for(let b of buttons) b.remove();
+					showPlayerSelect("Select a player to be the next president", "Select", player => {
+						if(player.getID() == storage.selfID) return false;
+						if(isPlayerDead(player.getID())) return false;
+						return true;
+					}, player => {
+						let p = new PacketClientPerformAction();
+						let a = new ActionPickPresident();
 
-							let p = new PacketClientPerformAction();
-							let a = new ActionPickPresident();
+						a.setPlayerID(player.getID());
+						p.setData(a);
 
-							a.setPlayerID(player.getID());
-							p.setData(a);
-							
-							Network.sendPacket(Packet.of(p));
-						}));
-					}
+						Network.sendPacket(Packet.of(p));
+					});
 					break;
 				}
 				case GameBoardAction.INSPECT_PLAYER:
 				{
-					let unitPixel = canvas.width / 1920;
-					let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-					let playerListY = unitPixel * 50;
-					let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	
-					let buttons = [];
-					for(let i = 0; i < storage.room.getPlayers().length; i++) {
-						let player = storage.room.getPlayers()[i];
-	
-						if(player.getID() == storage.selfID) continue;
-						if(isPlayerDead(player.getID())) continue;
-	
-						buttons.push(createButton("Inspect", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-							if(isGamePaused()) return;
-							for(let b of buttons) b.remove();
+					showPlayerSelect("Select a player to inspect", "Inspect", player => {
+						if(player.getID() == storage.selfID) return false;
+						if(isPlayerDead(player.getID())) return false;
+						return true;
+					}, player => {
+						let p = new PacketClientPerformAction();
+						let a = new ActionInspectPlayer();
 
-							let p = new PacketClientPerformAction();
-							let a = new ActionInspectPlayer();
-
-							a.setPlayerID(player.getID());
-							p.setData(a);
-							
-							Network.sendPacket(Packet.of(p)).then(response => {
-								let party = response.getData().getParty();
-								storage.partyPopup = {player: player, party: party};
-
-								createButton("Dismiss", canvas.width / 2 - unitPixel * 200, canvas.height / 2 + unitPixel * 100, unitPixel * 400, unitPixel * 50, b => {
-									storage.partyPopup = null;
-									b.remove();
-								});
-							});
-						}));
-					}
+						a.setPlayerID(player.getID());
+						p.setData(a);
+						Network.sendPacket(Packet.of(p)).then(response => {
+							Popup.ofTitleAndText("Inspect Player", player.getName() + "'s role is: " + response.getData().getParty().getFriendlyName())
+								.addButton("Okay")
+								.show();
+						});
+					});
 					break;
 				}
 				case GameBoardAction.BLOCK_PLAYER:
 				{
-					let unitPixel = canvas.width / 1920;
-					let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-					let playerListY = unitPixel * 50;
-					let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	
-					let buttons = [];
-					for(let i = 0; i < storage.room.getPlayers().length; i++) {
-						let player = storage.room.getPlayers()[i];
+					showPlayerSelect("Select a player to block", "Block", player => {
+						if(player.getID() == storage.selfID) return false;
+						if(isPlayerDead(player.getID())) return false;
+						if(player.getID() == s.getChancellor().getID()) return false;
+						if(player.getID() == s.getPresident().getID() && storage.room.getPlayers().length >= 8) return false;
+						return true;
+					}, player => {
+						let p = new PacketClientPerformAction();
+						let a = new ActionBlockPlayer();
 
-						let s = storage.room.getGameState();
+						a.setPlayerID(player.getID());
+						p.setData(a);
 
-						if(player.getID() == storage.selfID) continue;
-						if(isPlayerDead(player.getID())) continue;
-						if(player.getID() == s.getChancellor().getID()) continue;
-						if(player.getID() == s.getPresident().getID() && storage.room.getPlayers().length >= 8) continue;
-
-						buttons.push(createButton("Block", playerListX + playerListWidth / 3 * 2 + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 5, playerListWidth / 3 - unitPixel * 20, unitPixel * 50, () => {
-							if(isGamePaused()) return;
-							for(let b of buttons) b.remove();
-
-							let p = new PacketClientPerformAction();
-							let a = new ActionBlockPlayer();
-
-							a.setPlayerID(player.getID());
-							p.setData(a);
-
-							Network.sendPacket(Packet.of(p));
-						}));
-					}
+						Network.sendPacket(Packet.of(p));
+					});
 					break;
 				}
 			}
 		}
 
 		if(PacketServerPickCards.isInstance(packet.getData())) {
-			storage.hand.cards = packet.getData().getCards();
-			let unitPixel = canvas.width / 1920;
-			let cardWidth = unitPixel * 150;
-			let cardHeight = cardWidth * 1.45;
-
-			let cardSpacingH = unitPixel * 10;
-			let x = canvas.width / 2 - storage.hand.cards.length * (cardWidth + cardSpacingH) / 2;
-
-			let areas = [];
-			for(let i = 0; i < storage.hand.cards.length; i++) {
-				areas.push(createClickableArea(x + i * (cardWidth + cardSpacingH) + cardSpacingH / 2, canvas.height - cardHeight + cardSpacingH / 2, cardWidth, cardHeight, () => {
-					if(storage.hand.selected.indexOf(i) != -1) {
-						removeFromArray(storage.hand.selected, i);
-					}else {
-						storage.hand.selected.push(i);
-					}
-				}, "Card #" + (i + 1)));
-			}
-
 			let s = storage.room.getGameState();
-			let vetoButton = !packet.getData().isVetoBlocked() && s.getChancellor().getID() == storage.selfID && s.isVetoPowerUnlocked();
-			let buttons = [];
-
-			buttons.push(createButton("Confirm", canvas.width / 2 - unitPixel * (vetoButton ? 200 : 100), canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, () => {
-				if(isGamePaused()) return;
-				if(storage.hand.selected.length != 1) {
-					alert("Select exactly 1 card to be discarded");
-					return;
-				}
-
-				for(let btn of buttons) btn.remove();
-				for(let area of areas) area.remove();
-
-				let discardIndex = storage.hand.selected[0];
-
-				storage.hand.cards = [];
-				storage.hand.selected = [];
-
-				let p = new PacketClientDiscardCard();
-				p.setDiscardIndex(discardIndex);
-				Network.sendPacket(Packet.of(p));
-			}));
-
-			if(vetoButton) {
-				buttons.push(createButton("Veto", canvas.width / 2, canvas.height - cardHeight - unitPixel * 50, unitPixel * 200, unitPixel * 50, () => {
-					if(isGamePaused()) return;
-					for(let btn of buttons) btn.remove();
-					for(let area of areas) area.remove();
-
-					storage.hand.cards = [];
-					storage.hand.selected = [];
-
-					let p = new PacketClientVeto();
-					Network.sendPacket(Packet.of(p));
-				}));
-			}
+            let vetoButton = !packet.getData().isVetoBlocked() && s.getChancellor().getID() == storage.selfID && s.isVetoPowerUnlocked();
+			showCardsView(packet.getData().getCards(), true, vetoButton);
 		}
 
 		if(PacketServerVeto.isInstance(packet.getData())) {
-			let unitPixel = canvas.width / 1920;
-			let buttons = [];
-
-			buttons.push(createButton("Accept Veto", canvas.width / 2 - unitPixel * 205, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
-				if(isGamePaused()) return;
-				for(let b of buttons) b.remove();
-
-				let p = new PacketClientVeto();
-				p.setAcceptVeto(true);
-				Network.sendPacket(Packet.of(p));
-			}));
-
-			buttons.push(createButton("Decline Veto", canvas.width / 2 + unitPixel * 5, canvas.height - unitPixel * 100, unitPixel * 200, unitPixel * 100, () => {
-				if(isGamePaused()) return;
-				for(let b of buttons) b.remove();
-
-				let p = new PacketClientVeto();
-				p.setAcceptVeto(false);
-				Network.sendPacket(Packet.of(p));
-			}));
+			promptVeto();
 		}
 	});
 }
@@ -887,21 +663,18 @@ function createStartButtonIfNeeded() {
 	if(storage.room.getPlayers().length >= mode.getMinPlayers()) {
 		if(storage.room.isGameRunning()) return;
 		if(storage.room.getPlayers()[0].getID() != storage.selfID) return;
-		let unitPixel = canvas.width / 1920;
 
-		removeStartButton();
-
-		let b = createButton("Start Game", canvas.width / 2 - unitPixel * 200, canvas.height / 2 - unitPixel * 100, unitPixel * 400, unitPixel * 200, button => {
-			button.remove();
-
-			Network.sendPacket(Packet.of(new PacketClientStartGame()));
-		});
-		b.classList.add("start-button");
+		startGame.style.display = "block";
 	}
 }
 
+function startGameFunction() {
+	Network.sendPacket(Packet.of(new PacketClientStartGame()));
+	removeStartButton();
+}
+
 function removeStartButton() {
-	for(let b of document.getElementsByClassName("start-button")) b.remove();
+	startGame.style.display = "none";
 }
 
 function prepareCanvas() {
@@ -910,6 +683,21 @@ function prepareCanvas() {
 	// Size + Position the canvas to always have the correct aspect ratio
 	let numBoards = storage.room.getMode() == GameMode.SECRET_HITLER ? 2 : 3;
 	let aspectRatio = 3 / numBoards;
+
+	if(isMobile()) {
+		canvasDiv.style.width = canvasContainer.clientWidth;
+		canvasDiv.style.height = canvasContainer.clientWidth / aspectRatio;
+		canvasDiv.style.top = 0;
+		canvasDiv.style.left = 0;
+		canvas.width = canvasContainer.clientWidth;
+		canvas.height = canvasContainer.clientWidth / aspectRatio;
+
+		let singleBoardHeight = canvas.height / numBoards;
+		let docEl = document.documentElement;
+		docEl.style.setProperty("--card-width", singleBoardHeight * 3 / 5 / 1.45 + "px");
+		docEl.style.setProperty("--card-height", singleBoardHeight * 3 / 5 + "px");
+		return;
+	}
 
 	let containerWidth = canvasContainer.clientWidth;
 	let containerHeight = canvasContainer.clientHeight;
@@ -934,7 +722,9 @@ function prepareCanvas() {
 	}
 
 	let singleBoardHeight = canvas.height / numBoards;
-	cardPile.style.width = singleBoardHeight * 3 / 5 / 1.45;
+	let docEl = document.documentElement;
+	docEl.style.setProperty("--card-width", singleBoardHeight * 3 / 5 / 1.45 + "px");
+	docEl.style.setProperty("--card-height", singleBoardHeight * 3 / 5 + "px");
 }
 
 function draw() {
@@ -972,191 +762,6 @@ function draw() {
 	let fascistBoardOffset = mode == GameMode.SECRET_REICHSTAG ? 0 : -boardHeight;
 
 	drawBoard(ctx, GameParty.FASCIST, 0, fascistBoardOffset + 2 * boardHeight, canvas.width, boardHeight);
-
-	/*
-	// Draw pile
-	
-	let drawPileX = canvas.width / 5 - unitPixel * 20 - cardWidth;
-	let drawPileY = canvas.height / 2 - cardHeight / 2;
-
-	ctx.fillStyle = "gray";
-	for(let i = Math.min(gameState.getDrawPileSize() - 1, 2); i >= 0; i--) {
-		ctx.fillRect(drawPileX + unitPixel * 4 * i, drawPileY + unitPixel * 4 * i, cardWidth + unitPixel * 1, cardHeight + unitPixel * 1);
-		drawImageWithBounds(storage.assets.articleBack, drawPileX + unitPixel * 4 * i, drawPileY + unitPixel * 4 * i, cardWidth, cardHeight);
-	}
-
-	ctx.fillStyle = "white";
-	ctx.font = "normal bold " + unitPixel * 40 + "px Germania One";
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-	ctx.fillText(gameState.getDrawPileSize(), drawPileX + cardWidth / 2, drawPileY + cardHeight / 2 + unitPixel * 50);
-
-	// Role
-
-	if(storage.selfRole) {
-		ctx.fillStyle = storage.colors.role[storage.selfRole.name()];
-		ctx.textAlign = "left";
-		ctx.fillText(storage.selfRole.name(), canvas.width / 5 * 4 + unitPixel * 10, unitPixel * 25);
-	}
-
-	// Player list
-
-	let playerListX = canvas.width / 5 * 4 + unitPixel * 10;
-	let playerListY = unitPixel * 50;
-	let playerListWidth = canvas.width / 5 - unitPixel * 20;
-	let playerListHeight = unitPixel * 60 * 14; // 14 players max
-
-	ctx.fillStyle = "#363835";
-	ctx.fillRect(playerListX, playerListY, playerListWidth, playerListHeight);
-
-	ctx.fillStyle = "white";
-	ctx.textAlign = "left";
-	ctx.font = "normal bold " + unitPixel * 20 + "px Germania One";
-	for(let i = 0; i < storage.room.getPlayers().length; i++) {
-		let player = storage.room.getPlayers()[i];
-		let playerName = player.getName().substr(0, 20); // TODO
-
-		let isDead = isPlayerDead(player.getID());
-
-		if(player.getID() == storage.selfID) {
-			ctx.fillStyle = "green";
-		}else if(storage.selfRole) {
-			let partyName = storage.selfRole.getParty().name();
-
-			let pColor = "white";
-
-			if(player.isLeader) {
-				pColor = storage.colors.leader[partyName];
-			}
-
-			if(player.isTeammate) {
-				pColor = storage.colors.teammate[partyName];
-			}
-
-			ctx.fillStyle = pColor;
-		}else {
-			ctx.fillStyle = "white";
-		}
-
-		if(!player.online) {
-			ctx.fillStyle = "orangered";
-		}
-
-		ctx.fillText(playerName + (isDead ? " (Dead)" : ""), playerListX + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 15);
-
-		if(isDead) {
-			ctx.fillRect(playerListX + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 15, ctx.measureText(playerName).width, 2);
-		}
-
-		let s = storage.room.getGameState();
-		let iconX = playerListX + unitPixel * 10;
-		let iconOffsetX = 0;
-		let iconY = playerListY + unitPixel * 60 * i + unitPixel * 30;
-		let iconSize = unitPixel * 25;
-
-		if(!player.online) {
-			drawImageWithBounds(storage.assets.iconConnection, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(s.getPresident() != null && s.getPresident().getID() == player.getID()) {
-			drawImageWithBounds(storage.assets.iconPresident, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(s.getChancellor() != null && s.getChancellor().getID() == player.getID()) {
-			drawImageWithBounds(storage.assets.iconChancellor, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(s.getPreviousPresident() != null && s.getPreviousPresident().getID() == player.getID()) {
-			drawImageWithBounds(storage.assets.iconPreviousPresident, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(s.getPreviousChancellor() != null && s.getPreviousChancellor().getID() == player.getID()) {
-			drawImageWithBounds(storage.assets.iconPreviousChancellor, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(s.getBlockedPlayer() != null && s.getBlockedPlayer().getID() == player.getID()) {
-			drawImageWithBounds(storage.assets.iconPlayerBlocked, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(isDead) {
-			drawImageWithBounds(storage.assets.iconDead, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(isPlayerNotHitlerConfirmed(player.getID())) {
-			drawImageWithBounds(storage.assets.iconNotHitler, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(isPlayerNotStalinConfirmed(player.getID())) {
-			drawImageWithBounds(storage.assets.iconNotStalin, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(player.vote != null) {
-			drawImageWithBounds(player.vote ? storage.assets.iconYes : storage.assets.iconNo, iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		if(player.wasRole != null) {
-			drawImageWithBounds(storage.assets.iconRole[player.wasRole.name()], iconX + iconOffsetX, iconY, iconSize, iconSize);
-			iconOffsetX += iconSize + unitPixel * 5;
-		}
-
-		ctx.fillStyle = "lightgray";
-		ctx.fillRect(playerListX + unitPixel * 10, playerListY + unitPixel * 60 * i + unitPixel * 60 - unitPixel, playerListWidth - unitPixel * 20, unitPixel * 2);
-	}
-
-	// Hand
-
-	if(storage.hand.cards.length != 0) {
-		let cardSpacingH = unitPixel * 10;
-		ctx.fillStyle = "#363835";
-		let x = canvas.width / 2 - storage.hand.cards.length * (cardWidth + cardSpacingH) / 2;
-		ctx.fillRect(x, canvas.height - cardHeight, storage.hand.cards.length * (cardWidth + cardSpacingH), cardHeight);
-		for(let i = 0; i < storage.hand.cards.length; i++) {
-			let selected = storage.hand.selected.indexOf(i) != -1;
-			drawImageWithBounds(selected ? storage.assets.articleBack : storage.assets.article[storage.hand.cards[i].name()], x + i * (cardWidth + cardSpacingH) + cardSpacingH / 2, canvas.height - cardHeight + cardSpacingH / 2, cardWidth, cardHeight);
-		}
-	}
-
-
-	// Party membership popup
-
-	if(storage.partyPopup != null) {
-		ctx.fillStyle = "#363835";
-		ctx.fillRect(canvas.width / 2 - unitPixel * 200, canvas.height / 2 - unitPixel * 100, unitPixel * 400, unitPixel * 200);
-		
-		ctx.fillStyle = "white";
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.font = "normal bold " + unitPixel * 30 + "px Germania One";
-
-		ctx.fillText(storage.partyPopup.player.getName(), canvas.width / 2, canvas.height / 2 - unitPixel * 15);
-		ctx.fillText("Membership: " + storage.partyPopup.party.name(), canvas.width / 2, canvas.height / 2 + unitPixel * 15);
-	}
-
-	// Winning screen
-
-	if(storage.winner != null) {
-		ctx.fillStyle = "#363835";
-		ctx.fillRect(canvas.width / 2 - unitPixel * 200, canvas.height / 2 - unitPixel * 100, unitPixel * 400, unitPixel * 200);
-
-		ctx.fillStyle = "white";
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.font = "normal bold " + unitPixel * 30 + "px Germania One";
-
-		ctx.fillText("Winner: " + storage.winner.getFriendlyName(), canvas.width / 2, canvas.height / 2);
-	}
-	*/
-
 }
 
 function updateCardPile() {
@@ -1167,12 +772,21 @@ function updatePlayerList() {
 	while(playerList.firstChild) playerList.firstChild.remove();
 
 	for(let player of storage.room.getPlayers()) {
+		let oldEl = document.getElementById("player-" + player.getID());
+		let oldButton = oldEl != null ? oldEl.getElementsByClassName("player-button") : null;
+
 		let playerEl = document.createElement("div");
 		playerEl.classList.add("player-list-element");
+		playerEl.id = "player-" + player.getID();
+
+		let playerUpper = document.createElement("div");
+		playerUpper.classList.add("player-upper");
+		playerEl.appendChild(playerUpper);
 
 		let nameEl = document.createElement("a");
+		nameEl.classList.add("player-name");
 		nameEl.innerText = player.getName();
-		playerEl.appendChild(nameEl);
+		playerUpper.appendChild(nameEl);
 
 		let s = storage.room.getGameState();
 		let isDead = isPlayerDead(player.getID());
@@ -1199,53 +813,64 @@ function updatePlayerList() {
 			nameEl.style.color = "white";
 		}
 
+		if(oldButton != null) {
+			playerUpper.appendChild(oldButton);
+		}else {
+			let playerBtn = document.createElement("button");
+			playerBtn.classList.add("player-button");
+			playerBtn.classList.add("fancy-button");
+			playerBtn.innerText = "?";
+			playerBtn.style.display = "none";
+			playerUpper.append(playerBtn);
+		}
+
+		let icons = document.createElement("div");
+		icons.classList.add("player-icons");
+		playerEl.appendChild(icons);
+
 		if(!player.online) {
-			addIcon(playerEl, storage.assets.iconConnection);
+			addIcon(icons, storage.assets.iconConnection);
 		}
 	
 		if(s.getPresident() != null && s.getPresident().getID() == player.getID()) {
-			addIcon(playerEl, storage.assets.iconPresident);
+			addIcon(icons, storage.assets.iconPresident);
 		}
 	
 		if(s.getChancellor() != null && s.getChancellor().getID() == player.getID()) {
-			addIcon(playerEl, storage.assets.iconChancellor);
+			addIcon(icons, storage.assets.iconChancellor);
 		}
 	
 		if(s.getPreviousPresident() != null && s.getPreviousPresident().getID() == player.getID()) {
-			addIcon(playerEl, storage.assets.iconPreviousPresident);
+			addIcon(icons, storage.assets.iconPreviousPresident);
 		}
 	
 		if(s.getPreviousChancellor() != null && s.getPreviousChancellor().getID() == player.getID()) {
-			addIcon(playerEl, storage.assets.iconPreviousChancellor);
+			addIcon(icons, storage.assets.iconPreviousChancellor);
 		}
 	
 		if(s.getBlockedPlayer() != null && s.getBlockedPlayer().getID() == player.getID()) {
-			addIcon(playerEl, storage.assets.iconPlayerBlocked);
+			addIcon(icons, storage.assets.iconPlayerBlocked);
 		}
 	
 		if(isDead) {
-			addIcon(playerEl, storage.assets.iconDead);
+			addIcon(icons, storage.assets.iconDead);
 		}
 	
 		if(isPlayerNotHitlerConfirmed(player.getID())) {
-			addIcon(playerEl, storage.assets.iconNotHitler);
+			addIcon(icons, storage.assets.iconNotHitler);
 		}
 	
 		if(isPlayerNotStalinConfirmed(player.getID())) {
-			addIcon(playerEl, storage.assets.iconNotStalin);
+			addIcon(icons, storage.assets.iconNotStalin);
 		}
 	
 		if(player.vote != null) {
-			addIcon(playerEl, player.vote ? storage.assets.iconYes : storage.assets.iconNo);
+			addIcon(icons, player.vote ? storage.assets.iconYes : storage.assets.iconNo);
 		}
 	
 		if(player.wasRole != null) {
-			addIcon(playerEl, storage.assets.iconRole[player.wasRole.name()]);
+			addIcon(icons, storage.assets.iconRole[player.wasRole.name()]);
 		}
-
-		let ph = document.createElement("div");
-		ph.classList.add("player-list-placeholder");
-		playerEl.appendChild(ph);
 
 		playerList.appendChild(playerEl);
 	}
@@ -1278,80 +903,10 @@ function clearHoverables() {
 	}
 }
 
-function createButton(name, x, y, width, height, onclick, stateBound = false) {
-	let btn = document.createElement("button");
-	btn.textContent = name;
-	btn.classList.add("clickable", "ingame-button");
-	if(stateBound) btn.classList.add("state-bound");
-	btn.style.position = "absolute";
-	btn.style.left = (x / canvas.width * 100) + "%";
-	btn.style.top = (y / canvas.height * 100) + "%";
-	btn.style.width = (width / canvas.width * 100) + "%";
-	btn.style.height = (height / canvas.height * 100) + "%";
-	btn.style.fontSize = "1.5vw";
-	btn.onclick = () => onclick(btn);
-	gameContainer.appendChild(btn);
-	return btn;
-}
-
-function createClickableArea(x, y, width, height, onclick, label = null, stateBound = false) {
-	let area = document.createElement("div");
-	if(label != null) area.title = label;
-	area.classList.add("clickable");
-	if(stateBound) area.classList.add("state-bound");
-	area.style.position = "absolute";
-	area.style.left = (x / canvas.width * 100) + "%";
-	area.style.top = (y / canvas.height * 100) + "%";
-	area.style.width = (width / canvas.width * 100) + "%";
-	area.style.height = (height / canvas.height * 100) + "%";
-	area.onclick = () => onclick(area);
-	gameContainer.appendChild(area);
-	return area;
-}
-
-function createHoverableArea(x, y, width, height, label, stateBound = false) {
-	let area = document.createElement("div");
-	if(label != null) area.title = label;
-	area.classList.add("hoverable");
-	if(stateBound) area.classList.add("state-bound");
-	area.style.position = "absolute";
-	area.style.left = (x / canvas.width * 100) + "%";
-	area.style.top = (y / canvas.height * 100) + "%";
-	area.style.width = (width / canvas.width * 100) + "%";
-	area.style.height = (height / canvas.height * 100) + "%";
-	gameContainer.appendChild(area);
-	return area;
-}
-
 function loadImage(assetName) {
 	let img = new Image();
 	img.src = "assets/" + assetName;
 	return img;
-}
-
-function drawImageWithWidth(img, x, y, w) {
-	let h = w / img.width * img.height;
-	ctx.drawImage(img, x, y, w, h);
-}
-
-function drawImageWithHeight(img, x, y, h) {
-	let w = h / img.height * img.width;
-	ctx.drawImage(img, x, y, w, h);
-}
-
-function drawImageWithBounds(img, x, y, w, h) {
-	let imgAspectRatio = img.width / img.height;
-	let aspectRatio = w / h;
-	if(imgAspectRatio > aspectRatio) {
-		drawImageWithWidth(img, x, y + (1 - (aspectRatio / imgAspectRatio)) * h / 2, w);
-	}else {
-		drawImageWithHeight(img, x + (1 - (imgAspectRatio / aspectRatio)) * w / 2, y, h);
-	}
-}
-
-function removeFromArray(array, element) {
-	if(array.indexOf(element) == -1) return;
-	array.splice(array.indexOf(element), 1);
 }
 
 function getPlayer(playerID) {
@@ -1385,4 +940,274 @@ function isPlayerNotStalinConfirmed(playerID) {
 
 function isGamePaused() {
 	return storage.room.isGamePaused();
+}
+
+function mobileHideAll() {
+	document.getElementById("player-list").style.display = "none";
+	document.getElementById("mobile-chat").style.display = "none";
+	document.getElementById("mobile-menu").style.display = "none";
+}
+
+function mobilePlayers() {
+	mobileHideAll();
+	document.getElementById("player-list").style.display = null;
+}
+
+function mobileChat() {
+	mobileHideAll();
+	document.getElementById("mobile-chat").style.display = null;
+}
+
+function mobileMenu() {
+	mobileHideAll();
+	document.getElementById("mobile-menu").style.display = null;
+}
+
+function isMobile() {
+	return window.matchMedia("only screen and (max-width: 46.875em)").matches;
+}
+
+function showPlayerSelect(popupText, buttonText, condition, action) {
+	if(!isMobile()) {
+		// Show buttons in player list
+		for(let player of storage.room.getPlayers()) {
+			if(condition != null && !condition(player)) continue;
+			let playerEl = document.getElementById("player-" + player.getID());
+			let playerBtn = playerEl.getElementsByClassName("player-button")[0];
+			playerBtn.innerText = buttonText;
+			playerBtn.style.display = null; // Use default CSS display
+			playerBtn.onclick = () => {
+				if(isGamePaused()) return;
+				for(let b of document.getElementsByClassName("player-button")) b.style.display = "none";
+
+				action(player);
+			};
+		}
+	}else {
+		// Open popup to select player
+		let popup = Popup.ofTitleAndText("Select Player", popupText);
+
+		for(let player of storage.room.getPlayers()) {
+			if(condition != null && !condition(player)) continue;
+			popup.addButton(player.getName(), () => {
+				if(isGamePaused()) return;
+				action(player);
+			});
+		}
+
+		popup.addHideButton();
+		popup.show();
+	}
+}
+
+function promptVote() {
+	if(!isMobile()) {
+		// Show buttons at the bottom
+		voteButtons.style.display = "flex";
+	}else {
+		let s = storage.room.getGameState();
+		Popup.ofTitleAndText("Vote", s.getPresident().getName() + " proposes " + s.getChancellor().getName() + " to be the next chancellor")
+			.addButton("Vote Yes", () => {
+				if(isGamePaused()) return;
+
+				let p = new PacketClientVote();
+				p.setYes(true);
+				Network.sendPacket(Packet.of(p));
+				storage.selfVoted = true;
+			})
+			.addButton("Vote No", () => {
+				if(isGamePaused()) return;
+
+				let p = new PacketClientVote();
+				p.setYes(false);
+				Network.sendPacket(Packet.of(p));
+				storage.selfVoted = true;
+			})
+			.addHideButton()
+			.show();
+	}
+}
+
+function voteButton(vote) {
+	if(isGamePaused()) return;
+
+	let p = new PacketClientVote();
+	p.setYes(vote);
+	Network.sendPacket(Packet.of(p));
+	storage.selfVoted = true;
+	voteButtons.style.display = "none";
+}
+
+function promptVeto() {
+	if(!isMobile()) {
+		// Show buttons at the bottom
+		vetoButtons.style.display = "flex";
+	}else {
+		let s = storage.room.getGameState();
+		Popup.ofTitleAndText("Veto", s.getChancellor().getName() + " requested a veto")
+			.addButton("Accept Veto", () => {
+				if(isGamePaused()) return;
+
+				let p = new PacketClientVeto();
+				p.setAcceptVeto(true);
+				Network.sendPacket(Packet.of(p));
+			})
+			.addButton("Decline Veto", () => {
+				if(isGamePaused()) return;
+
+				let p = new PacketClientVeto();
+				p.setAcceptVeto(false);
+				Network.sendPacket(Packet.of(p));
+			})
+			.addHideButton()
+			.show();
+	}
+}
+
+function vetoButton(veto) {
+	if(isGamePaused()) return;
+
+	let p = new PacketClientVeto();
+	p.setAcceptVeto(veto);
+	Network.sendPacket(Packet.of(p));
+	vetoButtons.style.display = "none";
+}
+
+function promptDrawCards() {
+	if(!isMobile()) {
+		// Show "Draw" button below card pile
+		cardPileDraw.style.visibility = "unset";
+		cardPileDraw.innerText = "Draw";
+		cardPileDraw.onclick = () => {
+			if(isGamePaused()) return;
+
+			Network.sendPacket(Packet.of(new PacketClientDrawCards()));
+			cardPileDraw.style.visibility = "hidden";
+		};
+	}else {
+		Popup.ofTitleAndText("Draw Cards", "You need to draw some cards")
+			.addButton("Draw", () => {
+				if(isGamePaused()) return;
+
+				Network.sendPacket(Packet.of(new PacketClientDrawCards()));
+			})
+			.addHideButton()
+			.show();
+	}
+}
+
+function promptInspectCards(cards) {
+	if(!isMobile()) {
+		// Show "Inspect" button below card pile
+		cardPileDraw.style.visibility = "unset";
+		cardPileDraw.innerText = "Inspect";
+		cardPileDraw.onclick = () => {
+			if(isGamePaused()) return;
+
+			showCardsView(cards, false, false, () => {
+				let p = new PacketClientPerformAction();
+				Network.sendPacket(Packet.of(p));
+			});
+			cardPileDraw.style.visibility = "hidden";
+		};
+	}else {
+		Popup.ofTitleAndText("Inspect Cards", "You need to inspect the top three cards")
+			.addButton("Inspect", () => {
+				if(isGamePaused()) return;
+
+				Network.sendPacket(Packet.of(new PacketClientDrawCards()));
+			})
+			.addHideButton()
+			.show();
+	}
+}
+
+function showCardsView(cards, pickMode, vetoButton, action) {
+	if(!isMobile()) {
+		// Show card picker at the bottom of the screen
+		pickCards.style.display = "block";
+
+		while(pickCardsCards.firstChild) pickCardsCards.firstChild.remove();
+
+		let selected = [];
+		for(let i = 0; i < cards.length; i++) {
+			let card = cards[i];
+			let cardEl = document.createElement("img");
+			cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+			if(pickMode) cardEl.onclick = () => {
+				let isSelected = selected.indexOf(i) != -1;
+				if(isSelected) {
+					Util.removeFromArray(selected, i);
+					cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+				}else {
+					selected.push(i);
+					cardEl.src = "/assets/article/back.png";
+				}
+			};
+			pickCardsCards.appendChild(cardEl);
+		}
+
+		pickCardsConfirm.onclick = () => {
+			if(pickMode) {
+				if(selected.length != 1) {
+					Popup.ofTitleAndText("Error", "You need to select exactly 1 card to dismiss")
+						.addButton("Okay")
+						.show();
+					return;
+				}
+
+				let p = new PacketClientDiscardCard();
+				p.setDiscardIndex(selected[0]);
+				Network.sendPacket(Packet.of(p));
+				if(action != null) action(selected[0]);
+			}else {
+				if(action != null) action();
+			}
+
+			pickCardsConfirm.onclick = null;
+			pickCardsVeto.onclick = null;
+			pickCards.style.display = "none";
+		};
+
+		if(vetoButton) {
+			pickCardsVeto.style.display = null;
+			pickCardsVeto.onclick = () => {
+				let p = new PacketClientVeto();
+				Network.sendPacket(Packet.of(p));
+			};
+		}else {
+			pickCardsVeto.style.display = "none";
+		}
+	}else {
+		let popup = Popup.ofTitleAndText("Pick Card", "Pick a card to dismiss")
+			.addCardsView(cards, discardIndex => {
+				if(pickMode) {
+					let p = new PacketClientDiscardCard();
+					p.setDiscardIndex(discardIndex);
+					Network.sendPacket(Packet.of(p));
+					if(action != null) action(discardIndex);
+				}else {
+					if(action != null) action();
+				}
+			}, pickMode);
+		if(vetoButton) popup.addButton("Veto", () => {
+			let p = new PacketClientVeto();
+			Network.sendPacket(Packet.of(p));
+		});
+		popup.addHideButton();
+		popup.show();
+	}
+}
+
+function showVoteDismiss() {
+	if(isMobile()) return;
+	playerListButton.innerText = "Dismiss Votes";
+	playerListButton.style.display = "block";
+	playerListButton.onclick = () => {
+		for(let p of storage.room.getPlayers()) {
+			p.vote = null;
+		}
+		playerListButton.style.display = "none";
+		playerListButton.onclick = null;
+	};
 }

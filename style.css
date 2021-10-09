@@ -174,20 +174,20 @@ body, html {
 	position: absolute;
 	right: calc(80% + 10px);
 	top: 50%;
-	transform: translate(0, -50%);
-	max-width: 200px;
+	transform: translate(0, calc(-50% + 25px)); /* Add half the space that the button uses to always keep the card pile centered */
+	width: min-content;
 	height: min-content;
 	user-select: none;
 }
 
 #card-pile {
-	width: 100%;
+	width: var(--card-width);
 	height: auto;
 }
 
 #card-pile-text {
 	position: absolute;
-	top: 55%;
+	top: calc(55% - 25px);
 	left: 0;
 	width: 100%;
 	font-size: 3vw;
@@ -195,12 +195,33 @@ body, html {
 	text-align: center;
 }
 
-#player-list {
+#card-pile-draw {
+	width: 100%;
+	margin-top: 10px;
+	height: 40px;
+	font-size: 1.5vw;
+	visibility: hidden;
+}
+
+#player-role {
 	position: absolute;
 	top: 10px;
 	right: 10px;
 	width: calc(20% - 20px);
-	height: calc(100% - 20px);
+	height: 50px;
+	font-size: 2vw;
+	background-color: #363835;
+	user-select: none;
+	display: grid;
+	align-content: center;
+}
+
+#player-list {
+	position: absolute;
+	top: 70px;
+	right: 10px;
+	width: calc(20% - 20px);
+	height: calc(100% - 140px);
 	background-color: #363835;
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -215,12 +236,12 @@ body, html {
 	font-size: 1.5vw;
 	color: white;
 	text-align: left;
-	min-height: 50px;
 }
 
-.player-list-element > a {
-	display:block;
-	width: 80%;
+.player-name {
+	display: inline-block;
+	width: 70%;
+	height: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
@@ -228,7 +249,6 @@ body, html {
 .player-icon {
 	width: 1.5vw;
 	margin-right: 5px;
-	margin-top: 5px;
 }
 
 .player-list-element::after {
@@ -240,7 +260,112 @@ body, html {
 	background: linear-gradient(to right, rgba(128, 128, 128, 0), rgba(128, 128, 128, 255), rgba(128, 128, 128, 0))
 }
 
-.player-list-placeholder {
+.player-button {
 	display: inline-block;
+	position: absolute;
+	width: 30%;
+	height: 100%;
+	top: 0;
+	font-size: 1.5vw;
+}
+
+#player-list-button {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+	width: calc(20% - 20px);
+	height: 50px;
+	font-size: 30px;
+	display: none;
+}
+
+.player-icons {
+	width: 100%;
 	height: 1.5vw;
+	margin-top: 5px;
+}
+
+.player-upper {
+	position: relative;
+	width: 100%;
+	height: 2vw;
+}
+
+.mobile-button {
+	display: none;
+}
+
+#vote-buttons, #veto-buttons {
+	display: none;
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	height: 70px;
+	pointer-events: none;
+	transform: translate(-50%, 0);
+}
+
+.vote-button, .veto-button {
+	display: inline-block;
+	top: 0;
+	width: 150px;
+	height: 100%;
+	font-size: 30px;
+	pointer-events: all;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.fancy-button {
+	background-color: white;
+	border: none;
+	font-family: 'Germania One';
+	border-radius: 5px;
+}
+
+.fancy-button:hover {
+	cursor: pointer;
+	background-color: lightgray;
+}
+
+#pick-cards {
+	display: none;
+	position: absolute;
+	left: 50%;
+	bottom: 0;
+	width: min-content;
+	transform: translate(-50%, 0);
+}
+
+#pick-cards-cards {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	padding-top: 10px;
+	padding-left: 5px;
+	padding-right: 5px;
+	background-color: #363835;
+	gap: 10px;
+}
+
+#pick-cards-cards > img {
+	width: var(--card-width);
+}
+
+.cards-button {
+	height: 40px;
+	width: var(--card-width);
+	font-size: 25px;
+	margin-bottom: 10px;
+}
+
+#start-game {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 200px;
+	height: 150px;
+	font-size: 50px;
+	transform: translate(-50%, -50%);
+	display: none;
 }

@@ -1,10 +1,11 @@
 var thePopup = null;
+var unhideButton = document.getElementById("popup-unhide-button");
 
 class Popup {
 
 	title = null
 	text = null
-	buttons = []
+	elements = []
 	element = null
 
 	constructor() {}
@@ -20,13 +21,18 @@ class Popup {
 		return Popup.ofTitleAndText(null, text);
 	}
 
+	addCardsView(cards, action, pickMode = false) {
+		this.elements.push({type: "cards_view", pickMode: pickMode, cards: cards, action: action});
+		return this;
+	}
+
 	addButton(text, action) {
-		this.buttons.push({text: text, action: {dismiss: true, run: action}});
+		this.elements.push({type:"button", text: text, action: {dismiss: true, run: action}});
 		return this;
 	}
 
 	addHideButton() {
-		this.buttons.push({text: "Hide", action: {dismiss: false, run: () => this.hide()}});
+		this.elements.push({type:"button", text: "Hide", action: {dismiss: false, run: () => this.hide()}});
 		return this;
 	}
 
@@ -53,15 +59,63 @@ class Popup {
 			popup.appendChild(textEl);
 		}
 
-		for(let btn of this.buttons) {
-			let buttonEl = document.createElement("button");
-			buttonEl.classList.add("popup-button");
-			buttonEl.innerText = btn.text;
-			buttonEl.onclick = () => {
-				if(btn.action.dismiss) this.dismiss();
-				if(btn.action.run != null) btn.action.run();
-			};
-			popup.appendChild(buttonEl);
+		for(let el of this.elements) {
+			if(el.type == "button") {
+				let buttonEl = document.createElement("button");
+				buttonEl.classList.add("popup-button");
+				buttonEl.innerText = el.text;
+				buttonEl.onclick = () => {
+					if(el.action.dismiss) this.dismiss();
+					if(el.action.run != null) el.action.run();
+				};
+				popup.appendChild(buttonEl);
+			}else if(el.type == "cards_view") {
+				console.log(el);
+				let viewEl = document.createElement("div");
+				viewEl.classList.add("popup-cards-view");
+
+				let selected = [];
+				for(let i = 0; i < el.cards.length; i++) {
+					let card = el.cards[i];
+					let cardEl = document.createElement("img");
+					cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+					if(el.pickMode) cardEl.onclick = () => {
+						let isSelected = selected.indexOf(i) != -1;
+						if(isSelected) {
+							Util.removeFromArray(selected, i);
+							cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+						}else {
+							selected.push(i);
+							cardEl.src = "/assets/article/back.png";
+						}
+					};
+					viewEl.appendChild(cardEl);
+				}
+				popup.appendChild(viewEl);
+
+				let buttonEl = document.createElement("button");
+				buttonEl.classList.add("popup-button");
+				buttonEl.innerText = "Confirm";
+				buttonEl.onclick = () => {
+					this.dismiss();
+
+					if(el.pickMode) {
+						if(selected.length != 1) {
+							Popup.ofTitleAndText("Error", "You need to select exactly 1 card to dismiss")
+								.addButton("Okay", () => {
+									this.show();
+								})
+								.show();
+							return;
+						}
+
+						if(el.action != null) el.action(selected[0]);
+					}else {
+						if(el.action != null) el.action();
+					}
+				};
+				popup.appendChild(buttonEl);
+			}
 		}
 
 		popupC.appendChild(popup);
@@ -74,10 +128,16 @@ class Popup {
 
 	hide() {
 		this.element.style.display = "none";
+		unhideButton.style.display = "block";
 	}
 
 	unhide() {
 		this.element.style.display = "block";
+	}
+
+	static unhideCurrentPopup() {
+		if(thePopup != null) thePopup.unhide();
+		unhideButton.style.display = "none";
 	}
 
 }
