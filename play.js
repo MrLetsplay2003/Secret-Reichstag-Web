@@ -1152,11 +1152,11 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 			pickCardsVeto.onclick = () => {
 				let p = new PacketClientVeto();
 				Network.sendPacket(Packet.of(p));
-			};
 
-			pickCardsConfirm.onclick = null;
-			pickCardsVeto.onclick = null;
-			pickCards.style.display = "none";
+				pickCardsConfirm.onclick = null;
+				pickCardsVeto.onclick = null;
+				pickCards.style.display = "none";
+			};
 		}else {
 			pickCardsVeto.style.display = "none";
 		}
