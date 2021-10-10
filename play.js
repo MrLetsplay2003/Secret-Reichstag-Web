@@ -535,6 +535,8 @@ async function play() {
 				pl.vote = isYes;
 			}
 
+			storage.selfVoted = null;
+
 			updatePlayerList();
 			showVoteDismiss();
 		}
@@ -611,7 +613,7 @@ async function play() {
 						a.setPlayerID(player.getID());
 						p.setData(a);
 						Network.sendPacket(Packet.of(p)).then(response => {
-							Popup.ofTitleAndText("Inspect Player", player.getName() + "'s role is: " + response.getData().getParty().getFriendlyName())
+							Popup.ofTitleAndText("Inspect Player", player.getName() + "'s role is: " + response.getData().getParty().getFriendlyNameSingular())
 								.addButton("Okay")
 								.show();
 						});
@@ -766,9 +768,7 @@ function updatePlayerList() {
 	let oldChildren = new Array(...playerList.children);
 	for(let player of storage.room.getPlayers()) {
 		let oldEl = document.getElementById("player-" + player.getID());
-		console.log(oldEl);
 		let oldButton = oldEl != null ? oldEl.getElementsByClassName("player-button")[0] : null;
-		console.log(oldButton);
 
 		let playerEl = document.createElement("div");
 		playerEl.classList.add("player-list-element");
@@ -1153,6 +1153,10 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 				let p = new PacketClientVeto();
 				Network.sendPacket(Packet.of(p));
 			};
+
+			pickCardsConfirm.onclick = null;
+			pickCardsVeto.onclick = null;
+			pickCards.style.display = "none";
 		}else {
 			pickCardsVeto.style.display = "none";
 		}
