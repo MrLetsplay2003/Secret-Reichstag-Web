@@ -33,7 +33,7 @@ chatIn.onkeyup = event => {
 	if(event.key == "Enter" && event.target.value.trim() != "") {
 		if(storage.selfID != null) {
 			if(isPlayerDead(storage.selfID)) {
-				new Popup("Chat is currently disabled because you are dead")
+				Popup.ofTitleAndText("Error", "Chat is currently disabled because you are dead")
 					.addButton("Okay")
 					.show();
 				return;
@@ -763,11 +763,12 @@ function updateCardPile() {
 }
 
 function updatePlayerList() {
-	while(playerList.firstChild) playerList.firstChild.remove();
-
+	let oldChildren = new Array(...playerList.children);
 	for(let player of storage.room.getPlayers()) {
 		let oldEl = document.getElementById("player-" + player.getID());
-		let oldButton = oldEl != null ? oldEl.getElementsByClassName("player-button") : null;
+		console.log(oldEl);
+		let oldButton = oldEl != null ? oldEl.getElementsByClassName("player-button")[0] : null;
+		console.log(oldButton);
 
 		let playerEl = document.createElement("div");
 		playerEl.classList.add("player-list-element");
@@ -867,6 +868,10 @@ function updatePlayerList() {
 		}
 
 		playerList.appendChild(playerEl);
+	}
+
+	for(let c of oldChildren) {
+		c.remove();
 	}
 }
 
@@ -1182,5 +1187,6 @@ function showVoteDismiss() {
 		}
 		playerListButton.style.display = "none";
 		playerListButton.onclick = null;
+		updatePlayerList();
 	};
 }

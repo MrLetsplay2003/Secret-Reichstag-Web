@@ -346,6 +346,7 @@ body, html {
 
 #pick-cards-cards > img {
 	width: var(--card-width);
+	cursor: pointer;
 }
 
 .cards-button {
