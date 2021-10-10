@@ -622,6 +622,7 @@ async function play() {
 				}
 				case GameBoardAction.BLOCK_PLAYER:
 				{
+					let s = storage.room.getGameState();
 					showPlayerSelect("Select a player to block", "Block", player => {
 						if(player.getID() == storage.selfID) return false;
 						if(isPlayerDead(player.getID())) return false;
