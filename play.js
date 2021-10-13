@@ -1094,7 +1094,8 @@ function promptInspectCards(cards) {
 			.addButton("Inspect", () => {
 				if(isGamePaused()) return;
 
-				Network.sendPacket(Packet.of(new PacketClientDrawCards()));
+				let p = new PacketClientPerformAction();
+				Network.sendPacket(Packet.of(p));
 			})
 			.addHideButton()
 			.show();
