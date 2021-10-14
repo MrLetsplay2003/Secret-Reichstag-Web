@@ -65,8 +65,13 @@ class Popup {
 				buttonEl.classList.add("popup-button");
 				buttonEl.innerText = el.text;
 				buttonEl.onclick = () => {
-					if(el.action.dismiss) this.dismiss();
-					if(el.action.run != null) el.action.run();
+					let dismiss = el.action.dismiss;
+					if(el.action.run != null) {
+						let v = el.action.run();
+						if(v === false) dismiss = false; // Overwrite with return value if provided
+						if(v === true) dismiss = true;
+					}
+					if(dismiss) this.dismiss();
 				};
 				popup.appendChild(buttonEl);
 			}else if(el.type == "cards_view") {
@@ -96,22 +101,33 @@ class Popup {
 				buttonEl.classList.add("popup-button");
 				buttonEl.innerText = "Confirm";
 				buttonEl.onclick = () => {
-					this.dismiss();
+					let dismiss = true;
 
 					if(el.pickMode) {
 						if(selected.length != 1) {
 							Popup.ofTitleAndText("Error", "You need to select exactly 1 card to dismiss")
 								.addButton("Okay", () => {
 									this.show();
+									return true;
 								})
 								.show();
 							return;
 						}
 
-						if(el.action != null) el.action(selected[0]);
+						if(el.action != null) {
+							let v = el.action(selected[0]);
+							if(v === false) dismiss = false; // Overwrite with return value if provided
+							if(v === true) dismiss = true;
+						}
 					}else {
-						if(el.action != null) el.action();
+						if(el.action != null) {
+							let v = el.action();
+							if(v === false) dismiss = false; // Overwrite with return value if provided
+							if(v === true) dismiss = true;
+						}
 					}
+
+					if(dismiss) this.dismiss();
 				};
 				popup.appendChild(buttonEl);
 			}

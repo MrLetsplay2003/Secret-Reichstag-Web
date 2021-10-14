@@ -956,10 +956,11 @@ function showPlayerSelect(popupText, buttonText, condition, action) {
 			playerBtn.innerText = buttonText;
 			playerBtn.style.display = null; // Use default CSS display
 			playerBtn.onclick = () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 				for(let b of document.getElementsByClassName("player-button")) b.style.display = "none";
 
 				action(player);
+				return true;
 			};
 		}
 	}else {
@@ -969,8 +970,10 @@ function showPlayerSelect(popupText, buttonText, condition, action) {
 		for(let player of storage.room.getPlayers()) {
 			if(condition != null && !condition(player)) continue;
 			popup.addButton(player.getName(), () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
+
 				action(player);
+				return true;
 			});
 		}
 
@@ -987,20 +990,22 @@ function promptVote() {
 		let s = storage.room.getGameState();
 		Popup.ofTitleAndText("Vote", s.getPresident().getName() + " proposes " + s.getChancellor().getName() + " to be the next chancellor")
 			.addButton("Vote Yes", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				let p = new PacketClientVote();
 				p.setYes(true);
 				Network.sendPacket(Packet.of(p));
 				storage.selfVoted = true;
+				return true;
 			})
 			.addButton("Vote No", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				let p = new PacketClientVote();
 				p.setYes(false);
 				Network.sendPacket(Packet.of(p));
 				storage.selfVoted = true;
+				return true;
 			})
 			.addHideButton()
 			.show();
@@ -1025,18 +1030,20 @@ function promptVeto() {
 		let s = storage.room.getGameState();
 		Popup.ofTitleAndText("Veto", s.getChancellor().getName() + " requested a veto")
 			.addButton("Accept Veto", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				let p = new PacketClientVeto();
 				p.setAcceptVeto(true);
 				Network.sendPacket(Packet.of(p));
+				return true;
 			})
 			.addButton("Decline Veto", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				let p = new PacketClientVeto();
 				p.setAcceptVeto(false);
 				Network.sendPacket(Packet.of(p));
+				return true;
 			})
 			.addHideButton()
 			.show();
@@ -1058,17 +1065,19 @@ function promptDrawCards() {
 		cardPileDraw.style.visibility = "unset";
 		cardPileDraw.innerText = "Draw";
 		cardPileDraw.onclick = () => {
-			if(isGamePaused()) return;
+			if(isGamePaused()) return false;
 
 			Network.sendPacket(Packet.of(new PacketClientDrawCards()));
 			cardPileDraw.style.visibility = "hidden";
+			return true;
 		};
 	}else {
 		Popup.ofTitleAndText("Draw Cards", "You need to draw some cards")
 			.addButton("Draw", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				Network.sendPacket(Packet.of(new PacketClientDrawCards()));
+				return true;
 			})
 			.addHideButton()
 			.show();
@@ -1092,10 +1101,11 @@ function promptInspectCards(cards) {
 	}else {
 		Popup.ofTitleAndText("Inspect Cards", "You need to inspect the top three cards")
 			.addButton("Inspect", () => {
-				if(isGamePaused()) return;
+				if(isGamePaused()) return false;
 
 				let p = new PacketClientPerformAction();
 				Network.sendPacket(Packet.of(p));
+				return true;
 			})
 			.addHideButton()
 			.show();
@@ -1128,6 +1138,8 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 		}
 
 		pickCardsConfirm.onclick = () => {
+			if(isGamePaused()) return;
+
 			if(pickMode) {
 				if(selected.length != 1) {
 					Popup.ofTitleAndText("Error", "You need to select exactly 1 card to dismiss")
@@ -1152,6 +1164,8 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 		if(vetoButton) {
 			pickCardsVeto.style.display = null;
 			pickCardsVeto.onclick = () => {
+				if(isGamePaused()) return;
+
 				let p = new PacketClientVeto();
 				Network.sendPacket(Packet.of(p));
 
@@ -1165,6 +1179,8 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 	}else {
 		let popup = Popup.ofTitleAndText("Pick Card", "Pick a card to dismiss")
 			.addCardsView(cards, discardIndex => {
+				if(isGamePaused()) return false;
+
 				if(pickMode) {
 					let p = new PacketClientDiscardCard();
 					p.setDiscardIndex(discardIndex);
@@ -1173,6 +1189,8 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 				}else {
 					if(action != null) action();
 				}
+
+				return true;
 			}, pickMode);
 		if(vetoButton) popup.addButton("Veto", () => {
 			let p = new PacketClientVeto();
