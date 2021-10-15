@@ -155,4 +155,8 @@ class Popup {
 		unhideButton.style.display = "none";
 	}
 
+	static getCurrentPopup() {
+		return thePopup;
+	}
+
 }

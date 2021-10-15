@@ -19,18 +19,21 @@
 		<button id="popup-unhide-button" onclick="Popup.unhideCurrentPopup()">!</button>
 		<div id="room-container" class="full">
 			<div class="center" style="width:100%">
-				<button id="btn-create" class="btn w" onclick="createRoom()">Create Room</button><br/>
-				<button id="btn-join" class="btn w space-top" onclick="joinRoom()">Join Room</button><br/>
-				<button id="btn-rejoin" class="btn w space-top" onclick="rejoinRoom()">Rejoin Room</button><br/>
+				<img src="assets/sr-text.svg" class="menu-item">
 				<br/>
-				<button id="btn-donate" class="btn w space-top" onclick="redirect('https://discord.me/secretreichstag')">Discord</button><br/>
-				<button id="btn-donate" class="btn w space-top" onclick="redirect('https://paypal.me/MrLetsplayDonate')">Donate</button>
+				<br/>
+				<button id="btn-create" class="btn fancy-button menu-item" onclick="createRoom()">Create Room</button><br/>
+				<button id="btn-join" class="btn fancy-button menu-item space-top" onclick="joinRoom()">Join Room</button><br/>
+				<button id="btn-rejoin" class="btn fancy-button menu-item space-top" onclick="rejoinRoom()">Rejoin Room</button><br/>
+				<br/>
+				<button id="btn-donate" class="btn fancy-button menu-item space-top" onclick="redirect('https://discord.me/secretreichstag')">Discord</button><br/>
+				<button id="btn-donate" class="btn fancy-button menu-item space-top" onclick="redirect('https://paypal.me/MrLetsplayDonate')">Donate</button>
 			</div>
 		</div>
 		<div id="room-create-container" class="full" style="display:none;">
 			<div class="center" style="width:100%">
-				<input id="room-name" class="input w" placeholder="Room Name" autocomplete="off"/><br/>
-				<select id="game-mode" type="select" class="input space-top w" data-default="SECRET_HITLER">
+				<input id="room-name" class="input menu-item" placeholder="Room Name" autocomplete="off"/><br/>
+				<select id="game-mode" type="select" class="input space-top menu-item" data-default="SECRET_HITLER">
 					<option value="SECRET_HITLER">Secret Hitler</option>
 					<option value="SECRET_REICHSTAG">Secret Reichstag</option>
 				</select>
@@ -38,24 +41,24 @@
 				<!--<input id="liberal-card-count" type="number" min="5" max="15" data-default="9" class="center input space-top" placeholder="Liberal Cards" autocomplete="off"/><br/>
 				<input id="communist-card-count" type="number" min="6" max="15" data-default="11" class="center input space-top" placeholder="Communist Cards" autocomplete="off"/><br/>
 				<input id="fascist-card-count" type="number" min="6" max="15" data-default="11" class="center input space-top" placeholder="Fascist cards" autocomplete="off"/><br/>-->
-				<button id="btn-create-confirm" class="btn w space-top" onclick="createRoomConfirm()">Create</button>
+				<button id="btn-create-confirm" class="btn fancy-button menu-item space-top" onclick="createRoomConfirm()">Create</button>
 			</div>
 		</div>
 		<div id="room-join-container" class="full" style="display:none;">
 			<div class="center" style="width:100%">
-				<input id="room-id" class="input w" placeholder="Room ID" autocomplete="off"/><br/>
-				<button id="btn-join-confirm" class="btn w space-top" onclick="joinRoomConfirm()">Join</button>
+				<input id="room-id" class="input menu-item" placeholder="Room ID" autocomplete="off"/><br/>
+				<button id="btn-join-confirm" class="btn fancy-button menu-item space-top" onclick="joinRoomConfirm()">Join</button>
 			</div>
 		</div>
 		<div id="play-container" class="full" style="display:none;">
 			<div class="center" style="width:100%">
-				<input id="username" class="input w" placeholder="Username" autocomplete="off"/><br/>
-				<button id="btn-play" class="btn w space-top" onclick="nameConfirm()">Play</button><br/>
+				<input id="username" class="input menu-item" placeholder="Username" autocomplete="off"/><br/>
+				<button id="btn-play" class="btn fancy-button menu-item space-top" onclick="nameConfirm()">Play</button><br/>
 				<br/>
-				<button id="btn-rejoin-2" class="btn w space-top" onclick="rejoinRoom()">Rejoin Room</button>
+				<button id="btn-rejoin-2" class="btn fancy-button menu-item space-top" onclick="rejoinRoom()">Rejoin Room</button>
 			</div>
 		</div>
-		<button id="btn-reset" class="btn" onclick="resetPage()">Back</button>
+		<button id="btn-reset" class="btn fancy-button" onclick="resetPage()">Back</button>
 		<div id="game-container">
 			<div id="canvas-container">
 				<div id="canvas-div">

@@ -1,6 +1,6 @@
 /* jshint esversion: 6 */
 
-var VERBOSE_NETWORK = true;
+var VERBOSE_NETWORK = false;
 
 class ClassUtils {
 
@@ -151,12 +151,49 @@ class Network {
 			Network.webSocket = new WebSocket(window.location.protocol.replace("http", "ws") + "//" + window.location.hostname + "/sswss");
 
 			Network.webSocket.onerror = function(event) {
+				if(VERBOSE_NETWORK) console.log("WebSocket error", event);
 				reject(event);
 				return;
 			}
 
-			Network.webSocket.onclose = function() {
-				alert("Uh-oh, it looks like you got disconnected. Please try rejoining from the main page");
+			Network.webSocket.onclose = function(event) {
+				if(VERBOSE_NETWORK) console.log("WebSocket close", event);
+
+				if(!init) {
+					Popup.ofTitleAndText("Connection failed", "Failed to connect to the server").addButton("Okay", () => resetPage()).show();
+					return;
+				}
+
+				switch(event.code) {
+					case 1000: // Normal closure
+					{
+						if(Popup.getCurrentPopup() != null) return;
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: " + (event.reason == "" ? "Unknown reason" : event.reason)).addButton("Okay", () => resetPage()).show();
+						return;
+					}
+					case 1001: // Going away
+					{
+						if(Popup.getCurrentPopup() != null) return;
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Server shutting down").addButton("Okay", () => resetPage()).show();
+						return;
+					}
+					case 1006: // Abnormal closure
+					{
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Abnormal closure").addButton("Okay", () => resetPage()).show();
+						return;
+					}
+					case 1008: // Policy violation
+					{
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Client-side error: " + (event.reason == "" ? "Unknown cause" : event.reason)).addButton("Okay", () => resetPage()).show();
+						return;
+					}
+					default:
+					{
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Unknown (Code: " + event.code + ")").addButton("Okay", () => resetPage()).show();
+						return;
+					}
+				}
+				// alert("Uh-oh, it looks like you got disconnected. Please try rejoining from the main page");
 			}
 
 			Network.webSocket.addEventListener("message", ev => {

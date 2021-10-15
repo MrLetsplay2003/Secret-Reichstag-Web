@@ -24,6 +24,7 @@ var pickCardsConfirm = document.getElementById("pick-cards-confirm");
 var pickCardsVeto = document.getElementById("pick-cards-veto");
 var playerListButton = document.getElementById("player-list-button");
 var startGame = document.getElementById("start-game");
+var drawIntervalID = -1;
 
 var ctx = canvas.getContext("2d");
 
@@ -163,6 +164,10 @@ function resetPage() {
 		inp.value = def == null ? "" : def;
 	}
 
+	if(drawIntervalID != -1) clearInterval(drawIntervalID);
+
+	storage = {};
+
 	eventLog.value = "";
 
 	gameContainer.style.display = "none";
@@ -180,20 +185,10 @@ function resetPage() {
 	}
 }
 
-function displayError(message) {
-	let txt = document.createElement("div");
-	txt.classList.add("full", "message");
-	txt.innerText = message;
-	txt.style.zIndex = "1";
-	document.body.appendChild(txt);
-}
-
 async function play() {
 	try {
 		await Network.init(VERBOSE);
 	}catch(e) {
-		displayError("Connection failed");
-		console.log(e);
 		return;
 	}
 
@@ -233,7 +228,7 @@ async function play() {
 
 	Network.sendPacket(Packet.of(conPacket)).then(response => {
 		if(PacketServerJoinError.isInstance(response.getData())) {
-			displayError("Error: " + response.getData().getMessage());
+			Popup.ofTitleAndText("Error", response.getData().getMessage()).addButton("Okay", () => resetPage()).show();
 			return;
 		}
 
@@ -372,7 +367,7 @@ async function play() {
 		updatePlayerList();
 		updateCardPile();
 
-		setInterval(draw, REFRESH_TIME);
+		drawIntervalID = setInterval(draw, REFRESH_TIME);
 		window.onresize = draw;
 	
 		if(VERBOSE) console.log("Done!");
@@ -727,37 +722,20 @@ function prepareCanvas() {
 function draw() {
 	prepareCanvas();
 
-	let unitPixel = canvas.width / 1920;
-	let cardWidth = unitPixel * 150;
-	let cardHeight = cardWidth * 1.45;
-	let cardSpacing = unitPixel * 20;
-
-	let gameState = storage.room.getGameState();
-
 	ctx.fillStyle = "lightgray";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-	ctx.fillStyle = "black";
-	ctx.font = "normal bold " + unitPixel * 30 + "px Germania One";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.fillText("Room " + storage.roomID, unitPixel * 5, unitPixel * 5);
 
 	let mode = storage.room.getMode();
 	let boardHeight = storage.room.getMode() == GameMode.SECRET_HITLER ? canvas.height / 2 : canvas.height / 3;
 
 	// Liberal track
-
 	drawBoard(ctx, GameParty.LIBERAL, 0, 0, canvas.width, boardHeight);
 
 	// Communist track
-
 	if(mode == GameMode.SECRET_REICHSTAG) drawBoard(ctx, GameParty.COMMUNIST, 0, canvas.height * 1 / 3, canvas.width, boardHeight);
 
 	// Fascist track
-
 	let fascistBoardOffset = mode == GameMode.SECRET_REICHSTAG ? 0 : -boardHeight;
-
 	drawBoard(ctx, GameParty.FASCIST, 0, fascistBoardOffset + 2 * boardHeight, canvas.width, boardHeight);
 }
 

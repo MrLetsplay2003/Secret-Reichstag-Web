@@ -1,7 +1,7 @@
 body, html {
 	margin: 0;
 	overflow: hidden;
-	background-color: rgb(0, 136, 255);
+	background-color: #df7258;
 	font-size: 30px;
 	text-align: center;
 	font-family: 'Germania One';
@@ -28,28 +28,17 @@ body, html {
 .input {
 	padding-left: 5px;
 	padding-right: 5px;
+	border-radius: 5px;
 	background-color: white;
 	border: none;
 	height: 30px;
 	font-family: 'Germania One';
-	font-size: 20px;
+	font-size: 25px;
 }
 
-.btn {
-	background-color: limegreen;
-	border: none;
-	font-family: 'Germania One';
-	font-size: 20px;
-	cursor: pointer;
-	color: black;
-}
-
-.btn:hover {
-	background-color: lime;
-}
-
-.w {
-	width: 20%;
+.menu-item {
+	width: 300px;
+	min-height: 40px;
 }
 
 .center {
@@ -66,7 +55,7 @@ body, html {
 	position: absolute;
 	bottom: 10px;
 	left: 10px;
-	height: 30px;
+	height: 40px;
 	background-color: orangered;
 	z-index: 100;
 }
@@ -322,6 +311,10 @@ body, html {
 .fancy-button:hover {
 	cursor: pointer;
 	background-color: lightgray;
+}
+
+.btn {
+	font-size: 25px;
 }
 
 #pick-cards {
