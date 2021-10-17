@@ -174,7 +174,7 @@ class Network {
 					case 1001: // Going away
 					{
 						if(Popup.getCurrentPopup() != null) return;
-						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Server shutting down").addButton("Okay", () => resetPage()).show();
+						Popup.ofTitleAndText("Connection lost", "You got disconnected\nReason: Server shutting down/Client disconnect").addButton("Okay", () => resetPage()).show();
 						return;
 					}
 					case 1006: // Abnormal closure
