@@ -172,6 +172,8 @@ function resetPage() {
 
 	gameContainer.style.display = "none";
 
+	document.getElementsById("btn-reset").style.display = "block";
+
 	document.getElementById("play-container").style.display = "none";
 
 	document.getElementById("room-container").style.display = "block";
@@ -253,7 +255,7 @@ async function play() {
 
 		roomIDDisplay.innerText = "Room #" + room.getID();
 
-		document.getElementById("btn-reset").remove();
+		document.getElementById("btn-reset").style.display = "none";
 
 		if(VERBOSE) console.log("Loading assets...");
 		storage.assets = {
