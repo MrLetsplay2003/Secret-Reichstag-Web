@@ -172,7 +172,7 @@ function resetPage() {
 
 	gameContainer.style.display = "none";
 
-	document.getElementsById("btn-reset").style.display = "block";
+	document.getElementById("btn-reset").style.display = "block";
 
 	document.getElementById("play-container").style.display = "none";
 
