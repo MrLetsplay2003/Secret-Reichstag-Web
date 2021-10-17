@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" version="1.1" viewBox="0 0 135.47 135.47" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g stroke-linecap="round">
+  <rect transform="rotate(45)" x="75.836" y="-1.6054" width="64.215" height="3.2107" fill="#990200" opacity=".999" stroke-width=".72404" style="paint-order:stroke fill markers"/>
+  <rect transform="rotate(45)" x="101.38" y="-4.116" width="39.688" height="8.5045" rx="2.2679" fill="#990200" opacity=".999" stroke-width=".65437" style="paint-order:stroke fill markers"/>
+  <g transform="matrix(.3 0 0 .3 33.867 33.867)">
+   <circle cx="67.733" cy="67.733" r="67.733" fill="#990200" opacity=".999" stroke-width="4.405" style="paint-order:stroke fill markers"/>
+   <circle cx="67.733" cy="67.733" r="54.504" fill="#fff" opacity=".999" stroke-width="2.1886" style="paint-order:stroke fill markers"/>
+   <circle cx="67.733" cy="67.733" r="34.66" fill="#c13423" opacity=".999" stroke-width="2.1978" style="paint-order:stroke fill markers"/>
+   <circle cx="67.733" cy="67.733" r="21.431" fill="#990200" opacity=".999" stroke-width="2.335" style="paint-order:stroke fill markers"/>
+  </g>
+ </g>
+</svg>
