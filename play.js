@@ -172,6 +172,18 @@ function resetPage() {
 
 	gameContainer.style.display = "none";
 
+	document.getElementById("room-id").onkeydown = event => {
+		if(event.key == "Enter") joinRoomConfirm();
+	};
+
+	document.getElementById("room-name").onkeydown = event => {
+		if(event.key == "Enter") createRoomConfirm();
+	};
+
+	document.getElementById("username").onkeydown = event => {
+		if(event.key == "Enter") nameConfirm();
+	};
+
 	document.getElementById("btn-reset").style.display = "block";
 
 	document.getElementById("play-container").style.display = "none";
