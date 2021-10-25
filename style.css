@@ -86,8 +86,8 @@ body, html {
 #event-log {
 	position: absolute;
 	left: 10px;
-	bottom: 38px;
-	width: calc(20% - 20px);
+	bottom: 50px;
+	width: calc(20% - 30px);
 	height: 30%;
 	resize: none;
 	background-color: #363835;
@@ -103,7 +103,7 @@ body, html {
 	position: absolute;
 	left: 10px;
 	bottom: 10px;
-	width: calc(20% - 20px);
+	width: calc(20% - 30px);
 	height: 25px;
 	resize: none;
 	background-color: #363835;
