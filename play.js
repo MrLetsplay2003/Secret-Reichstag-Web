@@ -691,8 +691,8 @@ function prepareCanvas() {
 	let aspectRatio = 3 / numBoards;
 
 	if(isMobile()) {
-		canvasDiv.style.width = canvasContainer.clientWidth;
-		canvasDiv.style.height = canvasContainer.clientWidth / aspectRatio;
+		canvasDiv.style.width = (canvasContainer.clientWidth) + "px";
+		canvasDiv.style.height = (canvasContainer.clientWidth / aspectRatio) + "px";
 		canvasDiv.style.top = 0;
 		canvasDiv.style.left = 0;
 		canvas.width = canvasContainer.clientWidth;
@@ -700,8 +700,8 @@ function prepareCanvas() {
 
 		let singleBoardHeight = canvas.height / numBoards;
 		let docEl = document.documentElement;
-		docEl.style.setProperty("--card-width", singleBoardHeight * 3 / 5 / 1.45 + "px");
-		docEl.style.setProperty("--card-height", singleBoardHeight * 3 / 5 + "px");
+		docEl.style.setProperty("--card-width", (singleBoardHeight * 3 / 5 / 1.45) + "px");
+		docEl.style.setProperty("--card-height", (singleBoardHeight * 3 / 5) + "px");
 		return;
 	}
 
@@ -713,17 +713,17 @@ function prepareCanvas() {
 		canvas.height = containerHeight;
 		canvas.width = containerHeight * aspectRatio;
 
-		canvasDiv.style.height = containerHeight;
-		canvasDiv.style.width = containerHeight * aspectRatio;
-		canvasDiv.style.left = (containerWidth - canvas.width) / 2;
+		canvasDiv.style.height = containerHeight + "px";
+		canvasDiv.style.width = (containerHeight * aspectRatio) + "px";
+		canvasDiv.style.left = ((containerWidth - canvas.width) / 2) + "px";
 		canvasDiv.style.top = 0;
 	}else {
 		canvas.width = containerWidth;
 		canvas.height = containerWidth / aspectRatio;
 
-		canvasDiv.style.width = containerWidth;
-		canvasDiv.style.height = containerWidth / aspectRatio;
-		canvasDiv.style.top = (containerHeight - canvas.height) / 2;
+		canvasDiv.style.width = containerWidth + "px";
+		canvasDiv.style.height = (containerWidth / aspectRatio) + "px";
+		canvasDiv.style.top = ((containerHeight - canvas.height) / 2) + "px";
 		canvasDiv.style.left = 0;
 	}
 
