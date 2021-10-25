@@ -159,7 +159,7 @@ body, html {
 	position: absolute;
 	right: calc(80% + 10px);
 	top: 50%;
-	transform: translate(0, calc(-50% + 25px)); /* Add half the space that the button uses to always keep the card pile centered */
+	transform: translate(0, calc(-50% - 25px)); /* Subtract half the space that the button uses to always keep the card pile centered */
 	width: min-content;
 	height: min-content;
 	user-select: none;
@@ -172,7 +172,7 @@ body, html {
 
 #card-pile-text {
 	position: absolute;
-	top: calc(55% - 25px);
+	top: calc(55% + 25px);
 	left: 0;
 	width: 100%;
 	font-size: 3vw;
@@ -182,7 +182,7 @@ body, html {
 
 #card-pile-draw {
 	width: 100%;
-	margin-top: 10px;
+	margin-bottom: 10px;
 	height: 40px;
 	font-size: 1.5vw;
 	visibility: hidden;
