@@ -100,6 +100,10 @@
 		width: auto;
 	}
 
+	#card-pile-draw{
+		display: none;
+	}
+
 	#card-pile-text {
 		top: 55%;
 		font-size: 25px;
