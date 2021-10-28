@@ -271,10 +271,10 @@ async function play() {
 
 		if(VERBOSE) console.log("Loading assets...");
 		storage.assets = {
-			cArticle: loadImage("article/communist.png"),
-			fArticle: loadImage("article/fascist.png"),
-			lArticle: loadImage("article/liberal.png"),
-			articleBack: loadImage("article/back.png"),
+			cArticle: loadImage("article/communist.svg"),
+			fArticle: loadImage("article/fascist.svg"),
+			lArticle: loadImage("article/liberal.svg"),
+			articleBack: loadImage("article/back.svg"),
 
 			iconWin: {
 				FASCIST: loadImage("icon/action/win-f.svg"),
@@ -1115,15 +1115,15 @@ function showCardsView(cards, pickMode, vetoButton, action) {
 		for(let i = 0; i < cards.length; i++) {
 			let card = cards[i];
 			let cardEl = document.createElement("img");
-			cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+			cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".svg";
 			if(pickMode) cardEl.onclick = () => {
 				let isSelected = selected.indexOf(i) != -1;
 				if(isSelected) {
 					Util.removeFromArray(selected, i);
-					cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".png";
+					cardEl.src = "/assets/article/" + card.name().toLowerCase() + ".svg";
 				}else {
 					selected.push(i);
-					cardEl.src = "/assets/article/back.png";
+					cardEl.src = "/assets/article/back.svg";
 				}
 			};
 			pickCardsCards.appendChild(cardEl);
