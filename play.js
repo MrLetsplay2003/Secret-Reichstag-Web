@@ -277,55 +277,55 @@ async function play() {
 			articleBack: loadImage("article/back.svg"),
 
 			iconWin: {
-				FASCIST: loadImage("icon/action/win-f.svg"),
-				COMMUNIST: loadImage("icon/action/win-c.svg"),
+				FASCIST: loadImage("action/win-f.svg"),
+				COMMUNIST: loadImage("action/win-c.svg"),
 				LIBERAL: null
 			},
 
-			iconPlayerBlocked: loadImage("icon/player/blocked.svg"),
-			iconPreviousPresident: loadImage("icon/player/previous-president.svg"),
-			iconPreviousChancellor: loadImage("icon/player/previous-chancellor.svg"),
-			iconPresident: loadImage("icon/player/president.svg"),
-			iconChancellor: loadImage("icon/player/chancellor.svg"),
-			iconYes: loadImage("icon/player/vote-yes.svg"),
-			iconNo: loadImage("icon/player/vote-no.svg"),
-			iconDead: loadImage("icon/player/dead.svg"),
-			iconNotHitler: loadImage("icon/player/not-hitler.svg"),
-			iconNotStalin: loadImage("icon/player/not-stalin.svg"),
-			iconConnection: loadImage("icon/player/connection.svg"),
+			iconPlayerBlocked: loadImage("player/blocked.svg"),
+			iconPreviousPresident: loadImage("player/previous-president.svg"),
+			iconPreviousChancellor: loadImage("player/previous-chancellor.svg"),
+			iconPresident: loadImage("player/president.svg"),
+			iconChancellor: loadImage("player/chancellor.svg"),
+			iconYes: loadImage("player/vote-yes.svg"),
+			iconNo: loadImage("player/vote-no.svg"),
+			iconDead: loadImage("player/dead.svg"),
+			iconNotHitler: loadImage("player/not-hitler.svg"),
+			iconNotStalin: loadImage("player/not-stalin.svg"),
+			iconConnection: loadImage("player/connection.svg"),
 
 			iconRole: {
-				LIBERAL: loadImage("icon/player/role-liberal.svg"),
-				STALIN: loadImage("icon/player/role-stalin.svg"),
-				COMMUNIST: loadImage("icon/player/role-communist.svg"),
-				HITLER: loadImage("icon/player/role-hitler.svg"),
-				FASCIST: loadImage("icon/player/role-fascist.svg"),
+				LIBERAL: loadImage("player/role-liberal.svg"),
+				STALIN: loadImage("player/role-stalin.svg"),
+				COMMUNIST: loadImage("player/role-communist.svg"),
+				HITLER: loadImage("player/role-hitler.svg"),
+				FASCIST: loadImage("player/role-fascist.svg"),
 			},
 
 			actions: {
 				KILL_PLAYER: {
-					COMMUNIST: loadImage("icon/action/kill-c.svg"),
-					FASCIST: loadImage("icon/action/kill-f.svg"),
+					COMMUNIST: loadImage("action/kill-c.svg"),
+					FASCIST: loadImage("action/kill-f.svg"),
 				},
 				INSPECT_PLAYER: {
-					COMMUNIST: loadImage("icon/action/inspect-c.svg"),
-					FASCIST: loadImage("icon/action/inspect-f.svg"),
+					COMMUNIST: loadImage("action/inspect-c.svg"),
+					FASCIST: loadImage("action/inspect-f.svg"),
 				},
 				BLOCK_PLAYER: {
-					COMMUNIST: loadImage("icon/action/block-c.svg"),
-					FASCIST: loadImage("icon/action/block-f.svg"),
+					COMMUNIST: loadImage("action/block-c.svg"),
+					FASCIST: loadImage("action/block-f.svg"),
 				},
 				EXAMINE_TOP_CARDS: {
-					COMMUNIST: loadImage("icon/action/top-cards-c.svg"),
-					FASCIST: loadImage("icon/action/top-cards-f.svg"),
+					COMMUNIST: loadImage("action/top-cards-c.svg"),
+					FASCIST: loadImage("action/top-cards-f.svg"),
 				},
 				EXAMINE_TOP_CARDS_OTHER: {
-					COMMUNIST: loadImage("icon/action/top-cards-other-c.svg"),
-					FASCIST: loadImage("icon/action/top-cards-other-f.svg"),
+					COMMUNIST: loadImage("action/top-cards-other-c.svg"),
+					FASCIST: loadImage("action/top-cards-other-f.svg"),
 				},
 				PICK_PRESIDENT: {
-					COMMUNIST: loadImage("icon/action/pick-president-c.svg"),
-					FASCIST: loadImage("icon/action/pick-president-f.svg"),
+					COMMUNIST: loadImage("action/pick-president-c.svg"),
+					FASCIST: loadImage("action/pick-president-f.svg"),
 				}
 			}
 
