@@ -6,6 +6,8 @@ Secret Reichstag Web
 This project is a web version of a modified version of the game ["Secret Hitler"](https://www.secrethitler.com/)
 
 ## Hosting your own web client using Apache2
+Please keep in mind that these instructions apply to using Apache2 on Linux. If you're running it on Windows, you might need to adapt some of the steps.
+
 First, you need to clone this repo to your server or download the zip file and extract it to an appropriate location (e.g. `/var/www/secretreichstag/`).
 
 You then need to create a new site configuration file in `/etc/apache2/sites-available/` (e.g. `secretreichstag.conf`) with the following contents
