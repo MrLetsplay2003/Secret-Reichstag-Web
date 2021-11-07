@@ -36,6 +36,10 @@ body, html {
 	font-size: 25px;
 }
 
+.text-input.menu-item {
+	width: 390px;
+}
+
 .menu-item {
 	width: 400px;
 	min-height: 40px;
