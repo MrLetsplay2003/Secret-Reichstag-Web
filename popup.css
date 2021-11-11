@@ -9,6 +9,7 @@
 	min-width: 500px;
 	pointer-events: none;
 	z-index: 102;
+	color: black;
 }
 
 .popup {

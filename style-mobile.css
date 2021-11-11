@@ -1,9 +1,19 @@
 @media only screen and (max-width: 46.875em) {
 	.menu-item {
-		width: 90%;
+		width: 100%;
 	}
 
-	.btn {
+	.center {
+		width: calc(100% - 20px);
+		background-color: unset;
+		max-height: 100%;
+	}
+
+	input.menu-item {
+		width: calc(100% - 10px);
+	}
+
+	.fancy-button {
 		font-size: 30px;
 		height: unset;
 		min-height: 50px;
@@ -131,6 +141,7 @@
 		flex-grow: 1;
 		font-size: 25px;
 		margin: 5px;
+		min-height: unset;
 	}
 
 	#event-log {

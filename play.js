@@ -120,19 +120,151 @@ function joinRoomConfirm() {
 	storage.roomID = roomID;
 }
 
-function createRoomConfirm() {
-	let roomName = document.getElementById("room-name").value;
-	if(roomName == "") {
-		Popup.ofTitleAndText("Error", "You need to input a room name").addButton("Okay").show();
+async function createRoomAdvanced() {
+	if(!applyRoomSettings(false)) return;
+
+	let advContainer = document.getElementById("room-create-advanced-container");
+	document.getElementById("room-create-container").style.display = "none";
+	advContainer.style.display = "block";
+
+	if(!window.GameBoardAction) {
+		if(VERBOSE) console.log("Connecting to fetch classes");
+		await Network.init();
+		Network.disconnect();
+	}
+
+	let libAcs = document.getElementById("liberal-actions");
+	while(libAcs.firstChild) libAcs.firstChild.remove();
+	for(let i = 0; i < 4; i++) {
+		let sel = createActionSelect("liberal", i);
+		if(i > 0) libAcs.appendChild(document.createElement("br"));
+		libAcs.appendChild(sel);
+	}
+
+	let fascAcs = document.getElementById("fascist-actions");
+	while(fascAcs.firstChild) fascAcs.firstChild.remove();
+	for(let i = 0; i < 5; i++) {
+		let sel = createActionSelect("fascist", i);
+		if(i > 0) fascAcs.appendChild(document.createElement("br"));
+		fascAcs.appendChild(sel);
+	}
+
+	let commAcs = document.getElementById("communist-actions");
+	while(commAcs.firstChild) commAcs.firstChild.remove();
+	for(let i = 0; i < 5; i++) {
+		let sel = createActionSelect("communist", i);
+		if(i > 0) commAcs.appendChild(document.createElement("br"));
+		commAcs.appendChild(sel);
+	}
+
+	if(storage.roomSettings.mode != "SECRET_REICHSTAG") {
+		for(let comm of advContainer.getElementsByClassName("communist-only")) comm.style.display = "none";
+	}else {
+		for(let comm of advContainer.getElementsByClassName("communist-only")) comm.style.display = "block";
+	}
+}
+
+function createActionSelect(party, idx) {
+	let sel = document.createElement("select");
+	let none = document.createElement("option");
+	none.text = "No action";
+	none.value = "none";
+	sel.add(none);
+	let i = 0;
+	for(let gba of GameBoardAction.values()) {
+		if(gba == GameBoardAction.WIN) continue; // Not a valid action to add to the board
+		let op = document.createElement("option");
+		op.text = gba.getFriendlyName();
+		op.value = gba.name();
+		sel.add(op);
+		i++;
+	}
+	sel.id = party + "-action-" + idx;
+	sel.classList.add("input", "space-bottom", "menu-item");
+	return sel;
+}
+
+function createRoomAdvancedConfirm() {
+	let advanced = {};
+
+	let lAcs = [];
+	for(let i = 0; i < 4; i++) {
+		let a = getSelectedAction("liberal", i);
+		if(a != null) lAcs.push(a);
+	}
+	advanced.liberalActions = lAcs;
+
+	let fAcs = [];
+	for(let i = 0; i < 5; i++) {
+		let a = getSelectedAction("fascist", i);
+		if(a != null) fAcs.push(a);
+	}
+	advanced.fascistActions = fAcs;
+
+	if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
+		let cAcs = [];
+		for(let i = 0; i < 5; i++) {
+			let a = getSelectedAction("communist", i);
+			if(a != null) cAcs.push(a);
+		}
+		advanced.communistActions = cAcs;
+	}
+
+	let lC = document.getElementById("liberal-card-count").value;
+	if(lC == "") {
+		Popup.ofTitleAndText("Error", "Invalid liberal card count").addButton("Okay").show();
 		return;
 	}
+	advanced.liberalCards = parseInt(lC);
+
+	let fC = document.getElementById("fascist-card-count").value;
+	if(fC == "") {
+		Popup.ofTitleAndText("Error", "Invalid fascist card count").addButton("Okay").show();
+		return;
+	}
+	advanced.fascistCards = parseInt(fC);
+
+	if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
+		let cC = document.getElementById("communist-card-count").value;
+		if(cC == "") {
+			Popup.ofTitleAndText("Error", "Invalid communist card count").addButton("Okay").show();
+			return;
+		}
+		advanced.communistCards = parseInt(cC);
+	}
+
+	storage.roomSettings.advanced = advanced;
+	document.getElementById("room-create-advanced-container").style.display = "none";
+	document.getElementById("room-create-container").style.display = "block";
+}
+
+function getSelectedAction(party, i) {
+	let v = document.getElementById(party + "-action-" + i).value;
+	if(v == "none") return null;
+	let field = new GameBoardActionField();
+	field.setFieldIndex(i);
+	field.setAction(v);
+	return field;
+}
+
+function createRoomConfirm() {
+	if(!applyRoomSettings(true)) return;
 
 	document.getElementById("room-create-container").style.display = "none";
 	document.getElementById("play-container").style.display = "block";
+}
+
+function applyRoomSettings(strict) {
+	let roomName = document.getElementById("room-name").value;
+	if(strict && roomName == "") {
+		Popup.ofTitleAndText("Error", "You need to input a room name").addButton("Okay").show();
+		return false;
+	}
 
 	storage.roomName = roomName;
-	storage.roomSettings = {};
+	if(!storage.roomSettings) storage.roomSettings = {};
 	storage.roomSettings.mode = document.getElementById("game-mode").value;
+	return true;
 }
 
 function nameConfirm() {
@@ -184,8 +316,6 @@ function resetPage() {
 		if(event.key == "Enter") nameConfirm();
 	};
 
-	document.getElementById("btn-reset").style.display = "block";
-
 	document.getElementById("play-container").style.display = "none";
 
 	document.getElementById("room-container").style.display = "block";
@@ -230,6 +360,21 @@ async function play() {
 				roomSettings.setLiberalCardCount(6);
 			}
 
+			let advanced = storage.roomSettings.advanced;
+			if(advanced) {
+				if(advanced.liberalActions) {
+					roomSettings.setLiberalBoard(advanced.liberalActions);
+				}
+	
+				if(advanced.fascistActions) {
+					roomSettings.setFascistBoard(advanced.fascistActions);
+				}
+	
+				if(advanced.mode == "SECRET_REICHSTAG" && advanced.communistActions) {
+					roomSettings.setCommunistBoard(advanced.communistActions);
+				}
+			}
+
 			conPacket.setRoomSettings(roomSettings);
 		}
 	}
@@ -266,8 +411,6 @@ async function play() {
 		}
 
 		roomIDDisplay.innerText = "Room #" + room.getID();
-
-		document.getElementById("btn-reset").style.display = "none";
 
 		if(VERBOSE) console.log("Loading assets...");
 		storage.assets = {

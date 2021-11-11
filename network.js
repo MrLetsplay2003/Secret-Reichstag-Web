@@ -68,6 +68,10 @@ class ClassUtils {
 				window[d.name].valueOf = function(name) {
 					return d.enumValues[name];
 				}
+
+				window[d.name].values = function(name) {
+					return Object.values(d.enumValues);
+				}
 			}
 		}
 	}
@@ -232,6 +236,13 @@ class Network {
 				Network.listener(packet);
 			});
 		});
+	}
+
+	static disconnect() {
+		if(Network.webSocket != null) {
+			Network.webSocket.onclose = null;
+			Network.webSocket.close(1000, "Disconnect");
+		}
 	}
 
 	static sendPacket(packet) {
