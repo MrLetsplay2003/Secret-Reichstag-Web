@@ -26,6 +26,89 @@ var playerListButton = document.getElementById("player-list-button");
 var startGame = document.getElementById("start-game");
 var drawIntervalID = -1;
 
+var roomSettingsDefaults = {
+	SECRET_HITLER: {
+		"Secret Hitler: 5-6 players": {
+			liberalActions: [],
+			fascistActions: [
+				"none",
+				"none",
+				"EXAMINE_TOP_CARDS",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			liberalCards: 6,
+			fascistCards: 11
+		},
+		"Secret Hitler: 7-8 players": {
+			liberalActions: [],
+			fascistActions: [
+				"none",
+				"INSPECT_PLAYER",
+				"PICK_PRESIDENT",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			liberalCards: 6,
+			fascistCards: 11
+		},
+		"Secret Hitler: 8-10 players": {
+			liberalActions: [],
+			fascistActions: [
+				"INSPECT_PLAYER",
+				"INSPECT_PLAYER",
+				"PICK_PRESIDENT",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			liberalCards: 6,
+			fascistCards: 11
+		}
+	},
+	SECRET_REICHSTAG: {
+		"Secret Reichstag: 7-8 players": {
+			liberalActions: [],
+			fascistActions: [
+				"none",
+				"EXAMINE_TOP_CARDS",
+				"BLOCK_PLAYER",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			communistActions: [
+				"none",
+				"EXAMINE_TOP_CARDS_OTHER",
+				"PICK_PRESIDENT",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			liberalCards: 9,
+			fascistCards: 11,
+			communistCards: 11
+		},
+		"Secret Reichstag: 9-14 players": {
+			liberalActions: [],
+			fascistActions: [
+				"INSPECT_PLAYER",
+				"PICK_PRESIDENT",
+				"BLOCK_PLAYER",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			communistActions: [
+				"INSPECT_PLAYER",
+				"INSPECT_PLAYER",
+				"EXAMINE_TOP_CARDS_OTHER",
+				"KILL_PLAYER",
+				"KILL_PLAYER"
+			],
+			liberalCards: 9,
+			fascistCards: 11,
+			communistCards: 11
+		}
+	}
+};
+
 var ctx = canvas.getContext("2d");
 
 let storage = {};
@@ -133,34 +216,48 @@ async function createRoomAdvanced() {
 		Network.disconnect();
 	}
 
-	let libAcs = document.getElementById("liberal-actions");
-	while(libAcs.firstChild) libAcs.firstChild.remove();
-	for(let i = 0; i < 4; i++) {
-		let sel = createActionSelect("liberal", i);
-		if(i > 0) libAcs.appendChild(document.createElement("br"));
-		libAcs.appendChild(sel);
-	}
-
-	let fascAcs = document.getElementById("fascist-actions");
-	while(fascAcs.firstChild) fascAcs.firstChild.remove();
-	for(let i = 0; i < 5; i++) {
-		let sel = createActionSelect("fascist", i);
-		if(i > 0) fascAcs.appendChild(document.createElement("br"));
-		fascAcs.appendChild(sel);
-	}
-
-	let commAcs = document.getElementById("communist-actions");
-	while(commAcs.firstChild) commAcs.firstChild.remove();
-	for(let i = 0; i < 5; i++) {
-		let sel = createActionSelect("communist", i);
-		if(i > 0) commAcs.appendChild(document.createElement("br"));
-		commAcs.appendChild(sel);
-	}
+	loadAdvancedSettings();
 
 	if(storage.roomSettings.mode != "SECRET_REICHSTAG") {
 		for(let comm of advContainer.getElementsByClassName("communist-only")) comm.style.display = "none";
 	}else {
 		for(let comm of advContainer.getElementsByClassName("communist-only")) comm.style.display = "block";
+	}
+}
+
+function loadAdvancedSettings() {
+	loadActionSelects("liberal");
+	loadActionSelects("fascist");
+	loadActionSelects("communist");
+	loadCardCount("liberal");
+	loadCardCount("fascist");
+	loadCardCount("communist");
+}
+
+function loadCardCount(party) {
+	if(!storage.roomSettings.advanced || !storage.roomSettings.advanced[party + "Cards"]) return;
+	let input = document.getElementById(party + "-card-count");
+	input.value = storage.roomSettings.advanced[party + "Cards"];
+}
+
+function loadActionSelects(party) {
+	let container = document.getElementById(party + "-actions");
+	while(container.firstChild) container.firstChild.remove();
+	for(let i = 0; i < 5; i++) {
+		let selOp = "none";
+		if(storage.roomSettings.advanced && storage.roomSettings.advanced[party + "Actions"]) {
+			for(let ac of storage.roomSettings.advanced[party + "Actions"]) {
+				if(ac.getFieldIndex() == i) {
+					selOp = ac.getAction().name();
+					break;
+				}
+			}
+		}
+
+		let sel = createActionSelect(party, i);
+		sel.value = selOp;
+		if(i > 0) container.appendChild(document.createElement("br"));
+		container.appendChild(sel);
 	}
 }
 
@@ -184,53 +281,68 @@ function createActionSelect(party, idx) {
 	return sel;
 }
 
+function loadAdvancedDefaults() {
+	let popup = Popup.ofTitleAndText("Load Defaults", "Choose which settings to load");
+	let defs = roomSettingsDefaults[storage.roomSettings.mode];
+	for(let k in defs) {
+		popup.addButton(k, () => {
+			storage.roomSettings.advanced = convertDefaults(defs[k]);
+			loadAdvancedSettings();
+		});
+	}
+	popup.addButton("Cancel", null);
+	popup.show();
+}
+
+function convertDefaults(defaults) {
+	return {
+		liberalActions: convertActions(defaults.liberalActions),
+		fascistActions: convertActions(defaults.fascistActions),
+		communistActions: convertActions(defaults.communistActions),
+		liberalCards: defaults.liberalCards,
+		fascistCards: defaults.fascistCards,
+		communistCards: defaults.communistCards
+	}
+}
+
+function convertActions(convActions) {
+	if(convActions == null) return null;
+	let actions = [];
+	let i = 0;
+	for(let a of convActions) {
+		if(a != "none") {
+			let gba = new GameBoardActionField();
+			gba.setFieldIndex(i);
+			gba.setAction(GameBoardAction.valueOf(a));
+			actions.push(gba);
+		}
+		i++;
+	}
+	return actions;
+}
+
 function createRoomAdvancedConfirm() {
 	let advanced = {};
 
-	let lAcs = [];
-	for(let i = 0; i < 4; i++) {
-		let a = getSelectedAction("liberal", i);
-		if(a != null) lAcs.push(a);
-	}
-	advanced.liberalActions = lAcs;
-
-	let fAcs = [];
-	for(let i = 0; i < 5; i++) {
-		let a = getSelectedAction("fascist", i);
-		if(a != null) fAcs.push(a);
-	}
-	advanced.fascistActions = fAcs;
+	advanced.liberalActions = collectSelectedActions("liberal", 4);
+	advanced.fascistActions = collectSelectedActions("fascist", 5);
 
 	if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
-		let cAcs = [];
-		for(let i = 0; i < 5; i++) {
-			let a = getSelectedAction("communist", i);
-			if(a != null) cAcs.push(a);
-		}
-		advanced.communistActions = cAcs;
+		advanced.communistActions = collectSelectedActions("communist", 5);
 	}
 
-	let lC = document.getElementById("liberal-card-count").value;
-	if(lC == "") {
-		Popup.ofTitleAndText("Error", "Invalid liberal card count").addButton("Okay").show();
-		return;
-	}
-	advanced.liberalCards = parseInt(lC);
+	let lC = getCardCount("liberal");
+	if(lC == -1) return;
+	advanced.liberalCards = lC;
 
-	let fC = document.getElementById("fascist-card-count").value;
-	if(fC == "") {
-		Popup.ofTitleAndText("Error", "Invalid fascist card count").addButton("Okay").show();
-		return;
-	}
-	advanced.fascistCards = parseInt(fC);
+	let fC = getCardCount("fascist");
+	if(fC == -1) return;
+	advanced.fascistCards = fC;
 
 	if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
-		let cC = document.getElementById("communist-card-count").value;
-		if(cC == "") {
-			Popup.ofTitleAndText("Error", "Invalid communist card count").addButton("Okay").show();
-			return;
-		}
-		advanced.communistCards = parseInt(cC);
+		let cC = getCardCount("communist");
+		if(cC == -1) return;
+		advanced.communistCards = cC;
 	}
 
 	storage.roomSettings.advanced = advanced;
@@ -238,12 +350,30 @@ function createRoomAdvancedConfirm() {
 	document.getElementById("room-create-container").style.display = "block";
 }
 
+function getCardCount(party) {
+	let cardCount = document.getElementById(party + "-card-count").value;
+	if(cardCount == "") {
+		Popup.ofTitleAndText("Error", "Invalid " + party + " card count").addButton("Okay").show();
+		return -1;
+	}
+	return parseInt(cardCount);
+}
+
+function collectSelectedActions(party, count) {
+	let actions = [];
+	for(let i = 0; i < count; i++) {
+		let a = getSelectedAction(party, i);
+		if(a != null) actions.push(a);
+	}
+	return actions;
+}
+
 function getSelectedAction(party, i) {
 	let v = document.getElementById(party + "-action-" + i).value;
 	if(v == "none") return null;
 	let field = new GameBoardActionField();
 	field.setFieldIndex(i);
-	field.setAction(v);
+	field.setAction(GameBoardAction.valueOf(v));
 	return field;
 }
 
@@ -351,17 +481,21 @@ async function play() {
 			roomSettings.setMode(storage.roomSettings.mode);
 
 			if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
-				roomSettings.setCommunistCardCount(11);
-				roomSettings.setFascistCardCount(11);
 				roomSettings.setLiberalCardCount(9);
-			}else if(storage.roomSettings.mode == "SECRET_HITLER") {
-				roomSettings.setCommunistCardCount(0);
 				roomSettings.setFascistCardCount(11);
+				roomSettings.setCommunistCardCount(11);
+			}else if(storage.roomSettings.mode == "SECRET_HITLER") {
 				roomSettings.setLiberalCardCount(6);
+				roomSettings.setFascistCardCount(11);
+				roomSettings.setCommunistCardCount(0);
 			}
 
 			let advanced = storage.roomSettings.advanced;
 			if(advanced) {
+				if(advanced.liberalCards) roomSettings.setLiberalCardCount(advanced.liberalCards);
+				if(advanced.fascistCards) roomSettings.setFascistCardCount(advanced.fascistCards);
+				if(storage.roomSettings.mode == "SECRET_REICHSTAG" && advanced.communistCards) roomSettings.setLiberalCardCount(advanced.communistCards);
+
 				if(advanced.liberalActions) {
 					roomSettings.setLiberalBoard(advanced.liberalActions);
 				}
@@ -369,8 +503,8 @@ async function play() {
 				if(advanced.fascistActions) {
 					roomSettings.setFascistBoard(advanced.fascistActions);
 				}
-	
-				if(advanced.mode == "SECRET_REICHSTAG" && advanced.communistActions) {
+
+				if(storage.roomSettings.mode == "SECRET_REICHSTAG" && advanced.communistActions) {
 					roomSettings.setCommunistBoard(advanced.communistActions);
 				}
 			}
