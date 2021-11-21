@@ -31,8 +31,8 @@ var roomSettingsDefaults = {
 		"Secret Hitler: 5-6 players": {
 			liberalActions: [],
 			fascistActions: [
-				"none",
-				"none",
+				null,
+				null,
 				"EXAMINE_TOP_CARDS",
 				"KILL_PLAYER",
 				"KILL_PLAYER"
@@ -43,7 +43,7 @@ var roomSettingsDefaults = {
 		"Secret Hitler: 7-8 players": {
 			liberalActions: [],
 			fascistActions: [
-				"none",
+				null,
 				"INSPECT_PLAYER",
 				"PICK_PRESIDENT",
 				"KILL_PLAYER",
@@ -69,14 +69,14 @@ var roomSettingsDefaults = {
 		"Secret Reichstag: 7-8 players": {
 			liberalActions: [],
 			fascistActions: [
-				"none",
+				null,
 				"EXAMINE_TOP_CARDS",
 				"BLOCK_PLAYER",
 				"KILL_PLAYER",
 				"KILL_PLAYER"
 			],
 			communistActions: [
-				"none",
+				null,
 				"EXAMINE_TOP_CARDS_OTHER",
 				"PICK_PRESIDENT",
 				"KILL_PLAYER",
@@ -309,7 +309,7 @@ function loadAdvancedDefaults() {
 	let defs = roomSettingsDefaults[storage.roomSettings.mode];
 	for(let k in defs) {
 		popup.addButton(k, () => {
-			storage.roomSettings.advanced = convertDefaults(defs[k]);
+			storage.roomSettings.advanced = decodePreset(defs[k]);
 			loadAdvancedSettings();
 		});
 	}
@@ -317,23 +317,47 @@ function loadAdvancedDefaults() {
 	popup.show();
 }
 
-function convertDefaults(defaults) {
+function loadAdvancedPreset() {
+	let presets = JSON.parse(localStorage.presets || "{}");
+	let popup = Popup.ofTitleAndText("Load Preset", "Choose which settings to load");
+	for(let k in presets) {
+		popup.addButton(k, () => {
+			storage.roomSettings.advanced = decodePreset(presets[k]);
+			loadAdvancedSettings();
+		});
+	}
+	popup.addButton("Cancel", null);
+	popup.show();
+}
+
+function saveAdvancedPreset() {
+	let popup = Popup.ofTitleAndText("Save Preset", "What do you want to save your preset as?");
+	popup.addTextField("Name", "name", name => {
+		let presets = JSON.parse(localStorage.presets || "{}");
+		presets[name] = encodePreset(collectAdvancedSettings());
+		localStorage.presets = JSON.stringify(presets);
+	});
+	popup.addButton("Cancel", null);
+	popup.show();
+}
+
+function decodePreset(preset) {
 	return {
-		liberalActions: convertActions(defaults.liberalActions),
-		fascistActions: convertActions(defaults.fascistActions),
-		communistActions: convertActions(defaults.communistActions),
-		liberalCards: defaults.liberalCards,
-		fascistCards: defaults.fascistCards,
-		communistCards: defaults.communistCards
+		liberalActions: decodeActions(preset.liberalActions),
+		fascistActions: decodeActions(preset.fascistActions),
+		communistActions: decodeActions(preset.communistActions),
+		liberalCards: preset.liberalCards,
+		fascistCards: preset.fascistCards,
+		communistCards: preset.communistCards
 	}
 }
 
-function convertActions(convActions) {
+function decodeActions(convActions) {
 	if(convActions == null) return null;
 	let actions = [];
 	let i = 0;
 	for(let a of convActions) {
-		if(a != "none") {
+		if(a != null) {
 			let gba = new GameBoardActionField();
 			gba.setFieldIndex(i);
 			gba.setAction(GameBoardAction.valueOf(a));
@@ -344,7 +368,33 @@ function convertActions(convActions) {
 	return actions;
 }
 
+function encodePreset(preset) {
+	return {
+		liberalActions: encodeActions(preset.liberalActions),
+		fascistActions: encodeActions(preset.fascistActions),
+		communistActions: encodeActions(preset.communistActions),
+		liberalCards: preset.liberalCards,
+		fascistCards: preset.fascistCards,
+		communistCards: preset.communistCards
+	}
+}
+
+function encodeActions(convActions) {
+	if(convActions == null) return null;
+	let actions = [];
+	for(let a of convActions) {
+		actions[a.getFieldIndex()]  = a.getAction().name();
+	}
+	return actions;
+}
+
 function createRoomAdvancedConfirm() {
+	storage.roomSettings.advanced = collectAdvancedSettings();
+	document.getElementById("room-create-advanced-container").style.display = "none";
+	document.getElementById("room-create-container").style.display = "block";
+}
+
+function collectAdvancedSettings() {
 	let advanced = {};
 
 	advanced.liberalActions = collectSelectedActions("liberal", 4);
@@ -368,9 +418,7 @@ function createRoomAdvancedConfirm() {
 		advanced.communistCards = cC;
 	}
 
-	storage.roomSettings.advanced = advanced;
-	document.getElementById("room-create-advanced-container").style.display = "none";
-	document.getElementById("room-create-container").style.display = "block";
+	return advanced;
 }
 
 function getCardCount(party) {

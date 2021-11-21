@@ -31,6 +31,11 @@ class Popup {
 		return this;
 	}
 
+	addTextField(placeholder, name, action, mayBeEmpty = false) {
+		this.elements.push({type:"text_field", placeholder: placeholder, name: name, mayBeEmpty: mayBeEmpty, action: action});
+		return this;
+	}
+
 	addHideButton() {
 		this.elements.push({type:"button", text: "Hide", action: {dismiss: false, run: () => this.hide()}});
 		return this;
@@ -125,6 +130,37 @@ class Popup {
 							if(v === false) dismiss = false; // Overwrite with return value if provided
 							if(v === true) dismiss = true;
 						}
+					}
+
+					if(dismiss) this.dismiss();
+				};
+				popup.appendChild(buttonEl);
+			}else if(el.type == "text_field") {
+				let inputEl = document.createElement("input");
+				inputEl.placeholder = el.placeholder;
+				inputEl.classList.add("popup-input");
+				popup.appendChild(inputEl);
+
+				let buttonEl = document.createElement("button");
+				buttonEl.classList.add("popup-button");
+				buttonEl.innerText = "Confirm";
+				buttonEl.onclick = () => {
+					let dismiss = true;
+
+					if(!el.mayBeEmpty && inputEl.value.trim().length == 0) {
+						Popup.ofTitleAndText("Error", "You need to input a valid " + el.name)
+							.addButton("Okay", () => {
+								this.show();
+								return true;
+							})
+							.show();
+						return;
+					}
+
+					if(el.action != null) {
+						let v = el.action(inputEl.value.trim());
+						if(v === false) dismiss = false; // Overwrite with return value if provided
+						if(v === true) dismiss = true;
 					}
 
 					if(dismiss) this.dismiss();
