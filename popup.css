@@ -1,22 +1,17 @@
 #popup-container {
-	position: fixed;
-	top: 5px;
-	left: 50%;
-	width: 30%;
-	height: calc(100% - 10px);
-	transform: translate(-50%, 0);
-	max-height: 100%;
-	min-width: 500px;
-	pointer-events: none;
+	position: absolute;
 	z-index: 102;
 	color: black;
+	right: 0;
+	bottom: 0;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.3s;
 }
-
 .popup {
-	position: relative;
-	top: 50%;
-	left: 50%;
-	min-width: 100px;
 	min-height: 200px;
 	background-color: #ffffff;
 	pointer-events: all;
@@ -24,24 +19,79 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 	border-radius: 5px;
-	transform: translate(-50%, -50%);
 	display: flex;
 	flex-direction: column;
 	border: 3px solid #1d1d1d;
 	box-shadow: 10px 5px 10px #1d1d1d;
-
+	transition: all 0.3s;
+	animation-duration: 0.3s;
+	animation-name: popup;
+	animation-iteration-count: 1;
+	animation-delay: 0s;
+	animation-fill-mode: forwards;
+	opacity: 0;
+	transform: scale(0);
+	width: 500px;
+	max-width: calc(100% - 16px);
 }
-
-.popup-button {
+#popup-container:not(:empty) {
+	background: rgba(0, 0, 0, 0.5);
+}
+@keyframes popup {
+	0% {
+		opacity: 0;
+		transform: scale(0);
+	}
+	80% {
+		opacity: 1;
+		transform: scale(1.1);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+.popup[class*="win-"] {
+	color: #fff;
+}
+.popup.win-liberals {
+	background: #0091b3;
+}
+.popup.win-fascists {
+	background: #a35c2f;
+}
+.popup.win-communists {
+	background: #d60e00;
+}
+.popup[class*="win-"] .popup-title {
+	background: rgba(0, 0, 0, 0.3);
+	margin: 0;
 	width: 100%;
+	left: 0;
+	line-height: 50px;
+	color: #fff;
+	letter-spacing: 3px;
+	font-weight: 100;
+}
+.popup-button {
 	height: 50px;
 	border: none;
-	background-color: limegreen;
-	font-family: 'Germania One';
+	font-family: "Germania One";
 	font-size: 25px;
 	margin-top: 5px;
 	align-self: end;
+	margin: 0 5px 10px 5px;
+	border-radius: 5px;
+	padding: 0 45px;
 }
+.popup.popup[class*="win-"] .popup-button {
+	background-color: #fff;
+}
+
+.popup.popup[class*="win-"] .popup-button:hover {
+	background-color: #eee;
+}
+
 
 .popup-input {
 	width: calc(100% - 20px);

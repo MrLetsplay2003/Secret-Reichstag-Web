@@ -807,7 +807,7 @@ async function play() {
 			}
 
 			if(packet.getData().getWinner() != null) {
-				Popup.ofTitleAndText("Game Over", "The " + packet.getData().getWinner().getFriendlyName() + " have won the game")
+				Popup.ofTitleAndText("Game Over", "The " + packet.getData().getWinner().getFriendlyName() + " have won the game",["win-" + packet.getData().getWinner().getFriendlyName().toLowerCase()])
 					.addButton("GG", () => createStartButtonIfNeeded())
 					.show();
 			}

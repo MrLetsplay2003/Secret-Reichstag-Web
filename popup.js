@@ -7,13 +7,15 @@ class Popup {
 	text = null
 	elements = []
 	element = null
+  	classes = []
 
 	constructor() {}
 
-	static ofTitleAndText(title, text) {
+	static ofTitleAndText(title, text, classes = []) {
 		let p = new Popup();
 		p.title = title;
 		p.text = text;
+		p.classes = classes;
 		return p;
 	}
 
@@ -48,6 +50,9 @@ class Popup {
 		let popupC = document.getElementById("popup-container");
 		let popup = document.createElement("div");
 		popup.classList.add("popup");
+		for (let i = 0; i < this.classes.length; i++) {
+			popup.classList.add(this.classes[i]);
+		}
 		this.element = popup;
 
 		if(this.title != null) {
@@ -64,6 +69,10 @@ class Popup {
 			popup.appendChild(textEl);
 		}
 
+		const popupButtons = document.createElement("div");
+		popupButtons.classList.add("buttons");
+		popup.appendChild(popupButtons);
+
 		for(let el of this.elements) {
 			if(el.type == "button") {
 				let buttonEl = document.createElement("button");
@@ -78,7 +87,7 @@ class Popup {
 					}
 					if(dismiss) this.dismiss();
 				};
-				popup.appendChild(buttonEl);
+				popupButtons.appendChild(buttonEl);
 			}else if(el.type == "cards_view") {
 				let viewEl = document.createElement("div");
 				viewEl.classList.add("popup-cards-view");
@@ -100,7 +109,7 @@ class Popup {
 					};
 					viewEl.appendChild(cardEl);
 				}
-				popup.appendChild(viewEl);
+				popupButtons.appendChild(viewEl);
 
 				let buttonEl = document.createElement("button");
 				buttonEl.classList.add("popup-button");
@@ -134,12 +143,12 @@ class Popup {
 
 					if(dismiss) this.dismiss();
 				};
-				popup.appendChild(buttonEl);
+				popupButtons.appendChild(buttonEl);
 			}else if(el.type == "text_field") {
 				let inputEl = document.createElement("input");
 				inputEl.placeholder = el.placeholder;
 				inputEl.classList.add("popup-input");
-				popup.appendChild(inputEl);
+				popupButtons.appendChild(inputEl);
 
 				let buttonEl = document.createElement("button");
 				buttonEl.classList.add("popup-button");
@@ -165,7 +174,7 @@ class Popup {
 
 					if(dismiss) this.dismiss();
 				};
-				popup.appendChild(buttonEl);
+				popupButtons.appendChild(buttonEl);
 			}
 		}
 
