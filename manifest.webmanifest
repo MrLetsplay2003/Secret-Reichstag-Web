@@ -1,0 +1,15 @@
+{
+	"name": "Secret Reichstag Web",
+	"short_name": "SRWeb",
+	"start_url": "/",
+	"display": "standalone",
+	"scope": "/",
+	"theme_color": "#fff",
+	"background_color": "#fff",
+	"description": "Secret Reichstag",
+	"icons": [{
+	  "src": "assets/favicon.png",
+	  "sizes": "32x32",
+	  "type": "image/png"
+	}]
+  }

@@ -41,6 +41,23 @@ input.menu-item {
 	width: calc(100% - 10px);
 }
 
+.custom-box {
+	text-align: left;
+	font-size: 24px;
+	display: flex;
+	margin-bottom: 10px;
+}
+
+.custom-box input[type="checkbox"] {
+	width: 24px;
+	height: 24px;
+	margin-right: 10px;
+}
+
+.custom-box label {
+	user-select: none;
+}
+
 .menu-item {
 	width: 100%;
 	min-height: 40px;

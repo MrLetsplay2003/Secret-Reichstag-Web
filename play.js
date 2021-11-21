@@ -226,9 +226,9 @@ async function createRoomAdvanced() {
 }
 
 function loadAdvancedSettings() {
-	loadActionSelects("liberal");
-	loadActionSelects("fascist");
-	loadActionSelects("communist");
+	loadActionSelects("liberal", 4);
+	loadActionSelects("fascist", 5);
+	loadActionSelects("communist", 5);
 	loadCardCount("liberal");
 	loadCardCount("fascist");
 	loadCardCount("communist");
@@ -240,12 +240,34 @@ function loadCardCount(party) {
 	input.value = storage.roomSettings.advanced[party + "Cards"];
 }
 
-function loadActionSelects(party) {
+function loadActionSelects(party, count) {
 	let container = document.getElementById(party + "-actions");
 	while(container.firstChild) container.firstChild.remove();
-	for(let i = 0; i < 5; i++) {
+
+	let customBox = document.createElement("div");
+	customBox.classList.add("custom-box");
+
+	let hasSettings = storage.roomSettings.advanced && storage.roomSettings.advanced[party + "Actions"];
+
+	let useCustom = document.createElement("input");
+	useCustom.type = "checkbox";
+	useCustom.id = party + "-use-custom";
+	useCustom.checked = hasSettings;
+	useCustom.onchange = () => {
+		for(let i = 0; i < count; i++)
+			document.getElementById(party + "-action-" + i).disabled = !useCustom.checked;
+	};
+	customBox.appendChild(useCustom);
+
+	let customText = document.createElement("label");
+	customText.innerText = "Use custom board";
+	customText.setAttribute("for", party + "-use-custom");
+	customBox.append(customText);
+	container.appendChild(customBox);
+
+	for(let i = 0; i < count; i++) {
 		let selOp = "none";
-		if(storage.roomSettings.advanced && storage.roomSettings.advanced[party + "Actions"]) {
+		if(hasSettings) {
 			for(let ac of storage.roomSettings.advanced[party + "Actions"]) {
 				if(ac.getFieldIndex() == i) {
 					selOp = ac.getAction().name();
@@ -255,6 +277,7 @@ function loadActionSelects(party) {
 		}
 
 		let sel = createActionSelect(party, i);
+		sel.disabled = !hasSettings;
 		sel.value = selOp;
 		if(i > 0) container.appendChild(document.createElement("br"));
 		container.appendChild(sel);
@@ -277,7 +300,7 @@ function createActionSelect(party, idx) {
 		i++;
 	}
 	sel.id = party + "-action-" + idx;
-	sel.classList.add("input", "space-bottom", "menu-item");
+	sel.classList.add("input", "menu-item");
 	return sel;
 }
 
@@ -360,6 +383,7 @@ function getCardCount(party) {
 }
 
 function collectSelectedActions(party, count) {
+	if(!document.getElementById(party + "-use-custom").checked) return null;
 	let actions = [];
 	for(let i = 0; i < count; i++) {
 		let a = getSelectedAction(party, i);
@@ -556,7 +580,7 @@ async function play() {
 			iconWin: {
 				FASCIST: loadImage("action/win-f.svg"),
 				COMMUNIST: loadImage("action/win-c.svg"),
-				LIBERAL: null
+				LIBERAL: loadImage("action/win-l.svg"),
 			},
 
 			iconPlayerBlocked: loadImage("player/blocked.svg"),
@@ -583,26 +607,32 @@ async function play() {
 				KILL_PLAYER: {
 					COMMUNIST: loadImage("action/kill-c.svg"),
 					FASCIST: loadImage("action/kill-f.svg"),
+					LIBERAL: loadImage("action/kill-l.svg"),
 				},
 				INSPECT_PLAYER: {
 					COMMUNIST: loadImage("action/inspect-c.svg"),
 					FASCIST: loadImage("action/inspect-f.svg"),
+					LIBERAL: loadImage("action/inspect-l.svg"),
 				},
 				BLOCK_PLAYER: {
 					COMMUNIST: loadImage("action/block-c.svg"),
 					FASCIST: loadImage("action/block-f.svg"),
+					LIBERAL: loadImage("action/block-l.svg"),
 				},
 				EXAMINE_TOP_CARDS: {
 					COMMUNIST: loadImage("action/top-cards-c.svg"),
 					FASCIST: loadImage("action/top-cards-f.svg"),
+					LIBERAL: loadImage("action/top-cards-l.svg"),
 				},
 				EXAMINE_TOP_CARDS_OTHER: {
 					COMMUNIST: loadImage("action/top-cards-other-c.svg"),
 					FASCIST: loadImage("action/top-cards-other-f.svg"),
+					LIBERAL: loadImage("action/top-cards-other-l.svg"),
 				},
 				PICK_PRESIDENT: {
 					COMMUNIST: loadImage("action/pick-president-c.svg"),
 					FASCIST: loadImage("action/pick-president-f.svg"),
+					LIBERAL: loadImage("action/pick-president-l.svg"),
 				}
 			}
 
