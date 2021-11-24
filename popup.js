@@ -1,4 +1,5 @@
 var thePopup = null;
+var popupContainer = document.getElementById("popup-container");
 var unhideButton = document.getElementById("popup-unhide-button");
 
 class Popup {
@@ -7,6 +8,8 @@ class Popup {
 	text = null
 	elements = []
 	element = null
+	titleBackground = null
+	contentBackground = null
 
 	constructor() {}
 
@@ -19,6 +22,21 @@ class Popup {
 
 	static ofText(text) {
 		return Popup.ofTitleAndText(null, text);
+	}
+
+	setTitleBackground(color) {
+		this.titleBackground = color;
+		return this;
+	}
+
+	setContentBackground(color) {
+		this.contentBackground = color;
+		return this;
+	}
+
+	setTextColor(color) {
+		this.textColor = color;
+		return this;
 	}
 
 	addCardsView(cards, action, pickMode = false) {
@@ -45,15 +63,17 @@ class Popup {
 		if(thePopup != null) thePopup.dismiss();
 		thePopup = this;
 
-		let popupC = document.getElementById("popup-container");
 		let popup = document.createElement("div");
 		popup.classList.add("popup");
+		if(this.contentBackground) popup.style.backgroundColor = this.contentBackground;
+		if(this.textColor) popup.style.color = this.textColor;
 		this.element = popup;
 
 		if(this.title != null) {
 			let titleEl = document.createElement("p");
 			titleEl.classList.add("popup-title");
 			titleEl.innerText = this.title;
+			if(this.titleBackground) titleEl.style.backgroundColor = this.titleBackground;
 			popup.appendChild(titleEl);
 		}
 
@@ -169,21 +189,25 @@ class Popup {
 			}
 		}
 
-		popupC.appendChild(popup);
+		popupContainer.appendChild(popup);
+		popupContainer.classList.add("popup-visible");
 	}
 
 	dismiss() {
 		this.element.remove();
 		thePopup = null;
+		popupContainer.classList.remove("popup-visible");
 	}
 
 	hide() {
 		this.element.style.display = "none";
 		unhideButton.style.display = "block";
+		popupContainer.classList.remove("popup-visible");
 	}
 
 	unhide() {
-		this.element.style.display = "block";
+		this.element.style.display = "flex";
+		popupContainer.classList.add("popup-visible");
 	}
 
 	static unhideCurrentPopup() {

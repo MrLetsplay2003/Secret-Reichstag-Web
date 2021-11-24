@@ -807,8 +807,12 @@ async function play() {
 			}
 
 			if(packet.getData().getWinner() != null) {
+				console.log("WINNER", packet.getData().getWinner(), packet.getData().getWinner().name());
 				Popup.ofTitleAndText("Game Over", "The " + packet.getData().getWinner().getFriendlyName() + " have won the game")
 					.addButton("GG", () => createStartButtonIfNeeded())
+					.setTitleBackground(storage.colors.board[packet.getData().getWinner().name()].cardBackground)
+					.setContentBackground(storage.colors.board[packet.getData().getWinner().name()].outerFill)
+					.setTextColor("white")
 					.show();
 			}
 		}

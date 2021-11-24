@@ -1,35 +1,59 @@
 #popup-container {
 	position: fixed;
-	top: 5px;
-	left: 50%;
-	width: 30%;
-	height: calc(100% - 10px);
-	transform: translate(-50%, 0);
-	max-height: 100%;
-	min-width: 500px;
+	right: 0;
+	bottom: 0;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	pointer-events: none;
 	z-index: 102;
 	color: black;
+	transition: all 0.3s;
+}
+
+#popup-container.popup-visible {
+	pointer-events: all;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes popup {
+	0% {
+		opacity: 0;
+		transform: scale(0);
+	}
+	80% {
+		opacity: 1;
+		transform: scale(1.1);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
 }
 
 .popup {
-	position: relative;
-	top: 50%;
-	left: 50%;
-	min-width: 100px;
+	min-width: 500px;
 	min-height: 200px;
 	background-color: #ffffff;
 	pointer-events: all;
-	max-height: 100%;
+	max-height: calc(100% - 10px);
 	overflow-x: hidden;
 	overflow-y: auto;
 	border-radius: 5px;
-	transform: translate(-50%, -50%);
 	display: flex;
 	flex-direction: column;
 	border: 3px solid #1d1d1d;
 	box-shadow: 10px 5px 10px #1d1d1d;
-
+	transition: all 0.3s;
+	animation-duration: 0.3s;
+	animation-name: popup;
+	animation-iteration-count: 1;
+	animation-delay: 0s;
+	animation-fill-mode: forwards;
+	opacity: 0;
+	transform: scale(0);
 }
 
 .popup-button {
@@ -41,6 +65,12 @@
 	font-size: 25px;
 	margin-top: 5px;
 	align-self: end;
+	color: inherit;
+}
+
+.popup-button:hover {
+	background-color: lime;
+	cursor: pointer;
 }
 
 .popup-input {
@@ -53,17 +83,13 @@
 	align-self: center;
 }
 
-.popup-button:hover {
-	background-color: lime;
-	cursor: pointer;
-}
-
 .popup-title {
 	position: relative;
-	left: 5px;
-	width: calc(100% - 10px);
+	left: 0;
+	width: 100%;
 	margin: 0;
-	margin-top: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 	font-weight: bold;
 	font-size: 30px;
 	user-select: none;
@@ -113,18 +139,7 @@
 
 @media only screen and (max-width: 46.875em) {
 	.popup {
-		top: 50%;
-		left: 5px;
-		width: calc(100% - 16px);
-		transform: translate(0, -50%);
-	}
-
-	#popup-container {
-		top: 5px;
-		left: 5px;
-		width: calc(100% - 10px);
-		height: calc(100% - 10px);
-		transform: none;
 		min-width: unset;
+		width: calc(100% - 10px);
 	}
 }
