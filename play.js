@@ -331,10 +331,12 @@ function loadAdvancedPreset() {
 }
 
 function saveAdvancedPreset() {
+	let preset = collectAdvancedSettings();
+	if(preset == null) return;
 	let popup = Popup.ofTitleAndText("Save Preset", "What do you want to save your preset as?");
 	popup.addTextField("Name", "name", name => {
 		let presets = JSON.parse(localStorage.presets || "{}");
-		presets[name] = encodePreset(collectAdvancedSettings());
+		presets[name] = encodePreset(preset);
 		localStorage.presets = JSON.stringify(presets);
 	});
 	popup.addButton("Cancel", null);
@@ -389,7 +391,9 @@ function encodeActions(convActions) {
 }
 
 function createRoomAdvancedConfirm() {
-	storage.roomSettings.advanced = collectAdvancedSettings();
+	let settings = collectAdvancedSettings();
+	if(settings == null) return;
+	storage.roomSettings.advanced = settings;
 	document.getElementById("room-create-advanced-container").style.display = "none";
 	document.getElementById("room-create-container").style.display = "block";
 }
@@ -405,16 +409,16 @@ function collectAdvancedSettings() {
 	}
 
 	let lC = getCardCount("liberal");
-	if(lC == -1) return;
+	if(lC == -1) return null;
 	advanced.liberalCards = lC;
 
 	let fC = getCardCount("fascist");
-	if(fC == -1) return;
+	if(fC == -1) return null;
 	advanced.fascistCards = fC;
 
 	if(storage.roomSettings.mode == "SECRET_REICHSTAG") {
 		let cC = getCardCount("communist");
-		if(cC == -1) return;
+		if(cC == -1) return null;
 		advanced.communistCards = cC;
 	}
 
